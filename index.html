@@ -3,73 +3,214 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chef en Casa</title>
+    <title>ChefMate Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .step-item { transition: all 0.3s ease; }
-        .completed { opacity: 0.5; text-decoration: line-through; }
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Outfit', sans-serif; }
+        .step-active { background: #fff7ed; border-color: #f97316 !important; }
+        .completed { opacity: 0.5; text-decoration: line-through; background: #f8fafc !important; }
+        ::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-slate-900 text-slate-100 min-h-screen pb-28">
 
-    <!-- Header App-style -->
-    <header class="bg-white p-6 shadow-sm sticky top-0 z-10">
-        <h1 class="text-2xl font-black text-gray-800 tracking-tighter">Chef en Casa <span class="text-orange-500">.</span></h1>
+    <!-- Header -->
+    <header class="p-6 pb-2 max-w-md mx-auto flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-black tracking-tight text-white">ChefMate <span class="text-orange-500">.</span></h1>
+            <p class="text-slate-400 text-sm font-medium">¿Qué cocinamos hoy en casa?</p>
+        </div>
+        <div class="bg-slate-800 p-2.5 rounded-2xl border border-slate-700 text-orange-400 shadow-inner">
+            <i class="fa-solid fa-utensils text-lg"></i>
+        </div>
     </header>
 
-    <main class="max-w-md mx-auto p-4 space-y-6">
+    <main class="max-w-md mx-auto p-4 space-y-5">
         
-        <!-- Input Principal -->
-        <div class="bg-white p-5 rounded-3xl shadow-sm border border-gray-100">
-            <input type="text" id="ingredientes" placeholder="¿Qué tienes en la nevera? (pollo, arroz...)" class="w-full p-4 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-orange-500 font-medium">
-            
-            <div class="flex gap-2 mt-4">
-                <button onclick="setTiempo('rapido')" id="btn-rapido" class="flex-1 p-3 rounded-xl border-2 border-gray-100 font-bold text-sm">⚡ Rápido</button>
-                <button onclick="setTiempo('elaborado')" id="btn-elaborado" class="flex-1 p-3 rounded-xl border-2 border-gray-100 font-bold text-sm">👨‍🍳 Elaborado</button>
+        <!-- Input Ingredientes -->
+        <div class="bg-slate-800/80 backdrop-blur-md p-5 rounded-3xl shadow-xl border border-slate-700/60">
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">1. Ingredientes disponibles</label>
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
+                    <i class="fa-solid fa-basket-shopping"></i>
+                </span>
+                <input type="text" id="ingredientes" placeholder="Ej: Pollo, patatas, huevos..." 
+                    class="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-slate-900/90 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500 font-medium text-sm transition">
+            </div>
+
+            <!-- Selector de Método / Electrodoméstico -->
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mt-4 mb-2">2. Electrodoméstico</label>
+            <div class="grid grid-cols-4 gap-2">
+                <button onclick="setMetodo('sarten')" id="metodo-sarten" class="metodo-btn p-3 rounded-2xl bg-slate-900/60 border border-slate-700 flex flex-col items-center justify-center gap-1 transition hover:border-orange-500">
+                    <i class="fa-solid fa-cookie-bite text-amber-500 text-lg"></i>
+                    <span class="text-[11px] font-semibold text-slate-300">Sartén</span>
+                </button>
+                <button onclick="setMetodo('horno')" id="metodo-horno" class="metodo-btn p-3 rounded-2xl bg-slate-900/60 border border-slate-700 flex flex-col items-center justify-center gap-1 transition hover:border-orange-500">
+                    <i class="fa-solid fa-temperature-high text-red-500 text-lg"></i>
+                    <span class="text-[11px] font-semibold text-slate-300">Horno</span>
+                </button>
+                <button onclick="setMetodo('airfryer')" id="metodo-airfryer" class="metodo-btn p-3 rounded-2xl bg-slate-900/60 border border-slate-700 flex flex-col items-center justify-center gap-1 transition hover:border-orange-500">
+                    <i class="fa-solid fa-wind text-sky-400 text-lg"></i>
+                    <span class="text-[11px] font-semibold text-slate-300">Airfryer</span>
+                </button>
+                <button onclick="setMetodo('microondas')" id="metodo-microondas" class="metodo-btn p-3 rounded-2xl bg-slate-900/60 border border-slate-700 flex flex-col items-center justify-center gap-1 transition hover:border-orange-500">
+                    <i class="fa-solid fa-bolt text-yellow-400 text-lg"></i>
+                    <span class="text-[11px] font-semibold text-slate-300">Micro</span>
+                </button>
+            </div>
+
+            <!-- Selector de Tiempo / Complejidad -->
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mt-4 mb-2">3. Complejidad / Tiempo</label>
+            <div class="grid grid-cols-2 gap-2">
+                <button onclick="setTiempo('rapido')" id="btn-rapido" class="tiempo-btn p-3 rounded-2xl bg-slate-900/60 border border-slate-700 font-bold text-xs flex items-center justify-center gap-2 transition hover:border-orange-500 text-slate-300">
+                    <i class="fa-solid fa-bolt text-amber-400"></i> Rápido (&lt; 15 min)
+                </button>
+                <button onclick="setTiempo('elaborado')" id="btn-elaborado" class="tiempo-btn p-3 rounded-2xl bg-slate-900/60 border border-slate-700 font-bold text-xs flex items-center justify-center gap-2 transition hover:border-orange-500 text-slate-300">
+                    <i class="fa-solid fa-hat-chef text-orange-400"></i> Elaborado
+                </button>
             </div>
         </div>
 
-        <button onclick="generarReceta()" class="w-full bg-gray-900 text-white font-bold py-4 rounded-2xl shadow-xl active:scale-95 transition">¡Buscar receta ideal!</button>
+        <!-- Botón de Acción Principal -->
+        <button onclick="generarReceta()" class="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-slate-950 font-black py-4 px-6 rounded-2xl shadow-xl shadow-orange-500/20 hover:from-orange-400 hover:to-amber-400 active:scale-95 transition flex items-center justify-center gap-2 text-base">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Buscar Receta Mágica
+        </button>
 
-        <!-- Resultados Dinámicos -->
+        <!-- Tarjeta de Resultados Dinámicos -->
         <div id="pantallaReceta" class="hidden space-y-4">
-            <div class="bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-100">
-                <img id="imgReceta" src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800" class="w-full h-48 object-cover">
-                <div class="p-6">
-                    <h2 id="tituloReceta" class="text-xl font-bold mb-4">Pollo al Airfryer con Vegetales</h2>
-                    <div id="listaPasos" class="space-y-3">
-                        <!-- Los pasos se inyectan aquí -->
+            <div class="bg-slate-800/90 rounded-3xl overflow-hidden shadow-2xl border border-slate-700">
+                <div class="relative h-52">
+                    <img id="imgReceta" src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
+                    <span id="badgeMetodo" class="absolute top-4 left-4 bg-slate-900/80 backdrop-blur-md text-orange-400 border border-slate-700 text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-wind"></i> Airfryer
+                    </span>
+                </div>
+                <div class="p-6 space-y-4">
+                    <h2 id="tituloReceta" class="text-2xl font-black text-white leading-snug">Pollo crujiente con especias</h2>
+                    
+                    <div>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Paso a paso interactivo</h3>
+                        <p class="text-xs text-slate-400 mb-3"><i class="fa-solid fa-circle-info text-orange-400 mr-1"></i> Toca cada paso para marcarlo como completado o avanza sin problema.</p>
+                        <div id="listaPasos" class="space-y-2.5">
+                            <!-- Inyectado dinámicamente -->
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Últimas Recetas (Para repetir) -->
+        <section class="pt-2">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 px-1 flex items-center justify-between">
+                <span>Últimas Recetas</span>
+                <span class="text-orange-500 font-normal lowercase">toca para repetir</span>
+            </h3>
+            <div class="grid grid-cols-2 gap-3">
+                <div onclick="cargarRecetaReciente('Pechuga jugosa a la Sartén', 'sarten')" class="bg-slate-800/60 hover:bg-slate-800 p-3.5 rounded-2xl border border-slate-700/80 flex items-center gap-3 cursor-pointer transition">
+                    <div class="bg-amber-500/10 text-amber-400 w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border border-amber-500/20">
+                        <i class="fa-solid fa-cookie-bite"></i>
+                    </div>
+                    <div class="overflow-hidden">
+                        <h4 class="text-xs font-bold text-white truncate">Pechuga Sartén</h4>
+                        <p class="text-[10px] text-slate-400">Rápido</p>
+                    </div>
+                </div>
+                <div onclick="cargarRecetaReciente('Patatas crujientes Airfryer', 'airfryer')" class="bg-slate-800/60 hover:bg-slate-800 p-3.5 rounded-2xl border border-slate-700/80 flex items-center gap-3 cursor-pointer transition">
+                    <div class="bg-sky-500/10 text-sky-400 w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border border-sky-500/20">
+                        <i class="fa-solid fa-wind"></i>
+                    </div>
+                    <div class="overflow-hidden">
+                        <h4 class="text-xs font-bold text-white truncate">Patatas Airfryer</h4>
+                        <p class="text-[10px] text-slate-400">Elaborado</p>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
 
     <script>
-        let tiempo = 'rapido';
-        function setTiempo(t) {
-            tiempo = t;
-            document.querySelectorAll('button[id^="btn-"]').forEach(b => b.classList.remove('border-orange-500', 'bg-orange-50'));
-            document.getElementById(`btn-${t}`).classList.add('border-orange-500', 'bg-orange-50');
+        let metodoSeleccionado = 'airfryer';
+        let tiempoSeleccionado = 'rapido';
+
+        function setMetodo(metodo) {
+            metodoSeleccionado = metodo;
+            document.querySelectorAll('.metodo-btn').forEach(b => {
+                b.classList.remove('border-orange-500', 'bg-orange-500/10');
+            });
+            document.getElementById(`metodo-${metodo}`).classList.add('border-orange-500', 'bg-orange-500/10');
         }
 
+        function setTiempo(tiempo) {
+            tiempoSeleccionado = tiempo;
+            document.querySelectorAll('.tiempo-btn').forEach(b => {
+                b.classList.remove('border-orange-500', 'bg-orange-500/10', 'text-white');
+                b.classList.add('text-slate-300');
+            });
+            const btn = document.getElementById(`btn-${tiempo}`);
+            btn.classList.add('border-orange-500', 'bg-orange-500/10', 'text-white');
+            btn.classList.remove('text-slate-300');
+        }
+
+        setMetodo('airfryer');
+        setTiempo('rapido');
+
         function generarReceta() {
-            document.getElementById('pantallaReceta').classList.remove('hidden');
-            const pasos = [
-                "Lavar y cortar los ingredientes en trozos pequeños.",
-                "Precalentar el electrodoméstico seleccionado.",
-                "Sazonar al gusto con especias.",
-                "Cocinar durante 15 minutos exactos."
-            ];
+            const ingInput = document.getElementById('ingredientes').value.trim();
+            const ingredientesTexto = ingInput ? ingInput : "tus ingredientes de casa";
             
+            document.getElementById('pantallaReceta').classList.remove('hidden');
+            document.getElementById('tituloReceta').innerText = `Delicia de ${ingredientesTexto} (${tiempoSeleccionado})`;
+            
+            const fotos = {
+                'sarten': 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800',
+                'horno': 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=800',
+                'airfryer': 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800',
+                'microondas': 'https://images.unsplash.com/photo-1543339308-43e59d6b73a6?w=800'
+            };
+            document.getElementById('imgReceta').src = fotos[metodoSeleccionado] || fotos['airfryer'];
+            document.getElementById('badgeMetodo').innerHTML = `<i class="fa-solid fa-fire-burner"></i> ${metodoSeleccionado.toUpperCase()}`;
+
+            const pasos = [
+                `Lava y prepara los ingredientes principales (${ingredientesTexto}).`,
+                `Configura tu ${metodoSeleccionado} a la temperatura adecuada para este plato.`,
+                `Añade especias al gusto, salpimenta y coloca en el recipiente.`,
+                `Cocina durante el tiempo estimado (${tiempoSeleccionado === 'rapido' ? '8-12 minutos' : '20-25 minutos'}) vigilando el punto óptimo.`,
+                `¡Emplatar y disfrutar en pareja!`
+            ];
+
+            renderizarPasos(pasos);
+            document.getElementById('pantallaReceta').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function renderizarPasos(pasos) {
             let lista = document.getElementById('listaPasos');
             lista.innerHTML = pasos.map((p, i) => `
-                <div class="step-item flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 cursor-pointer" onclick="this.classList.toggle('completed')">
-                    <div class="bg-orange-100 text-orange-600 font-bold w-8 h-8 rounded-full flex items-center justify-center text-sm">${i+1}</div>
-                    <p class="font-medium text-gray-700">${p}</p>
+                <div class="step-item flex items-center gap-3.5 p-3.5 rounded-2xl bg-slate-900/60 border border-slate-700/60 cursor-pointer transition hover:border-orange-500/50" onclick="togglePaso(this)">
+                    <div class="step-num bg-slate-800 text-orange-400 font-bold w-8 h-8 rounded-xl flex items-center justify-center text-xs shrink-0 border border-slate-700">${i+1}</div>
+                    <p class="text-sm font-medium text-slate-200 leading-snug flex-1">${p}</p>
+                    <div class="text-slate-600 text-sm px-1"><i class="fa-regular fa-circle-check"></i></div>
                 </div>
             `).join('');
+        }
+
+        function togglePaso(element) {
+            element.classList.toggle('completed');
+            element.classList.toggle('step-active');
+            const checkIcon = element.querySelector('.fa-regular, .fa-solid');
+            if (element.classList.contains('completed')) {
+                checkIcon.className = 'fa-solid fa-circle-check text-orange-500';
+            } else {
+                checkIcon.className = 'fa-regular fa-circle-check text-slate-600';
+            }
+        }
+
+        function cargarRecetaReciente(nombre, metodo) {
+            setMetodo(metodo);
+            document.getElementById('ingredientes').value = nombre;
+            generarReceta();
         }
     </script>
 </body>
