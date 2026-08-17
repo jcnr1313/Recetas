@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chef en Casa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .step-item { transition: all 0.3s ease; }
+        .completed { opacity: 0.5; text-decoration: line-through; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+    <!-- Header App-style -->
+    <header class="bg-white p-6 shadow-sm sticky top-0 z-10">
+        <h1 class="text-2xl font-black text-gray-800 tracking-tighter">Chef en Casa <span class="text-orange-500">.</span></h1>
+    </header>
+
+    <main class="max-w-md mx-auto p-4 space-y-6">
+        
+        <!-- Input Principal -->
+        <div class="bg-white p-5 rounded-3xl shadow-sm border border-gray-100">
+            <input type="text" id="ingredientes" placeholder="¿Qué tienes en la nevera? (pollo, arroz...)" class="w-full p-4 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-orange-500 font-medium">
+            
+            <div class="flex gap-2 mt-4">
+                <button onclick="setTiempo('rapido')" id="btn-rapido" class="flex-1 p-3 rounded-xl border-2 border-gray-100 font-bold text-sm">⚡ Rápido</button>
+                <button onclick="setTiempo('elaborado')" id="btn-elaborado" class="flex-1 p-3 rounded-xl border-2 border-gray-100 font-bold text-sm">👨‍🍳 Elaborado</button>
+            </div>
+        </div>
+
+        <button onclick="generarReceta()" class="w-full bg-gray-900 text-white font-bold py-4 rounded-2xl shadow-xl active:scale-95 transition">¡Buscar receta ideal!</button>
+
+        <!-- Resultados Dinámicos -->
+        <div id="pantallaReceta" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-100">
+                <img id="imgReceta" src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800" class="w-full h-48 object-cover">
+                <div class="p-6">
+                    <h2 id="tituloReceta" class="text-xl font-bold mb-4">Pollo al Airfryer con Vegetales</h2>
+                    <div id="listaPasos" class="space-y-3">
+                        <!-- Los pasos se inyectan aquí -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let tiempo = 'rapido';
+        function setTiempo(t) {
+            tiempo = t;
+            document.querySelectorAll('button[id^="btn-"]').forEach(b => b.classList.remove('border-orange-500', 'bg-orange-50'));
+            document.getElementById(`btn-${t}`).classList.add('border-orange-500', 'bg-orange-50');
+        }
+
+        function generarReceta() {
+            document.getElementById('pantallaReceta').classList.remove('hidden');
+            const pasos = [
+                "Lavar y cortar los ingredientes en trozos pequeños.",
+                "Precalentar el electrodoméstico seleccionado.",
+                "Sazonar al gusto con especias.",
+                "Cocinar durante 15 minutos exactos."
+            ];
+            
+            let lista = document.getElementById('listaPasos');
+            lista.innerHTML = pasos.map((p, i) => `
+                <div class="step-item flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 cursor-pointer" onclick="this.classList.toggle('completed')">
+                    <div class="bg-orange-100 text-orange-600 font-bold w-8 h-8 rounded-full flex items-center justify-center text-sm">${i+1}</div>
+                    <p class="font-medium text-gray-700">${p}</p>
+                </div>
+            `).join('');
+        }
+    </script>
+</body>
+</html>
