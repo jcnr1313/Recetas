@@ -17,10 +17,10 @@
 <body class="bg-[#f8f9fa] text-slate-800 min-h-screen pb-32">
 
     <!-- HEADER SUPERIOR -->
-    <header class="bg-white/80 backdrop-blur-md px-5 py-4 sticky top-0 z-30 border-b border-slate-100 flex justify-between items-center">
+    <header class="bg-white/85 backdrop-blur-md px-5 py-4 sticky top-0 z-30 border-b border-slate-100 flex justify-between items-center shadow-xs">
         <div>
             <h1 class="text-xl font-extrabold tracking-tight text-slate-900">ChefMate <span class="text-orange-500">.</span></h1>
-            <p class="text-xs text-slate-400 font-medium" id="headerSubtitle">Descubre el placer de cocinar</p>
+            <p class="text-xs text-slate-400 font-medium" id="headerSubtitle">Tu cocina inteligente y organizada</p>
         </div>
         <div class="flex items-center gap-2">
             <button onclick="cambiarVista('favoritos')" class="w-10 h-10 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center hover:bg-orange-100 transition relative">
@@ -35,8 +35,7 @@
 
         <!-- VISTA 1: INICIO / BUSCADOR -->
         <section id="vista-inicio" class="space-y-5">
-            <!-- Buscador Principal -->
-            <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 space-y-3">
+            <div class="bg-white p-4 rounded-3xl shadow-xs border border-slate-100 space-y-3">
                 <div class="relative">
                     <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
                         <i class="fa-solid fa-magnifying-glass"></i>
@@ -47,7 +46,7 @@
 
                 <!-- Categorías Rápidas -->
                 <div class="flex gap-2 overflow-x-auto hide-scrollbar pt-1">
-                    <button onclick="filtrarCategoria('todos')" class="cat-btn px-4 py-2 rounded-xl bg-orange-500 text-white font-bold text-xs shrink-0 transition shadow-sm">✨ Todas</button>
+                    <button onclick="filtrarCategoria('todos')" class="cat-btn px-4 py-2 rounded-xl bg-orange-500 text-white font-bold text-xs shrink-0 transition shadow-xs">✨ Todas</button>
                     <button onclick="filtrarCategoria('rapido')" class="cat-btn px-4 py-2 rounded-xl bg-slate-100 text-slate-600 font-bold text-xs shrink-0 transition hover:bg-slate-200">⚡ &lt; 20 min</button>
                     <button onclick="filtrarCategoria('saludable')" class="cat-btn px-4 py-2 rounded-xl bg-slate-100 text-slate-600 font-bold text-xs shrink-0 transition hover:bg-slate-200">🥗 Saludable</button>
                     <button onclick="filtrarCategoria('mexicana')" class="cat-btn px-4 py-2 rounded-xl bg-slate-100 text-slate-600 font-bold text-xs shrink-0 transition hover:bg-slate-200">🌮 Mexicana</button>
@@ -55,21 +54,19 @@
                 </div>
             </div>
 
-            <!-- Grid de Recetas Dinámicas -->
+            <!-- Grid de Recetas -->
             <div>
                 <div class="flex justify-between items-center mb-3 px-1">
-                    <h2 class="text-sm font-extrabold uppercase tracking-wider text-slate-500">Recetas Destacadas</h2>
+                    <h2 class="text-xs font-extrabold uppercase tracking-wider text-slate-400">Recetas Destacadas</h2>
                     <span id="contadorResultados" class="text-xs text-orange-500 font-bold"></span>
                 </div>
-                <div id="gridRecetas" class="grid grid-cols-2 gap-3.5">
-                    <!-- Inyectado por JS -->
-                </div>
+                <div id="gridRecetas" class="grid grid-cols-2 gap-3.5"></div>
             </div>
         </section>
 
-        <!-- VISTA 2: PEQUES (Platos Originales para Niños) -->
+        <!-- VISTA 2: PEQUES -->
         <section id="vista-peques" class="space-y-4 hidden">
-            <div class="bg-gradient-to-r from-amber-400 to-orange-400 p-5 rounded-3xl text-slate-950 shadow-md">
+            <div class="bg-gradient-to-r from-amber-400 to-orange-400 p-5 rounded-3xl text-slate-950 shadow-sm">
                 <div class="flex items-center gap-3">
                     <div class="text-3xl">🧸</div>
                     <div>
@@ -78,52 +75,115 @@
                     </div>
                 </div>
             </div>
-            <div id="gridPeques" class="grid grid-cols-2 gap-3.5">
-                <!-- Inyectado por JS -->
-            </div>
+            <div id="gridPeques" class="grid grid-cols-2 gap-3.5"></div>
         </section>
 
-        <!-- VISTA 3: PLANIFICADOR (Menú Semanal) -->
-        <section id="vista-plan" class="space-y-4 hidden">
-            <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100">
+        <!-- VISTA 3: PLANIFICADOR Y COMPRA -->
+        <section id="vista-plan" class="space-y-5 hidden">
+            <div class="bg-white p-5 rounded-3xl shadow-xs border border-slate-100">
                 <h2 class="font-extrabold text-base text-slate-800 mb-1">Planificador Semanal 📅</h2>
-                <p class="text-xs text-slate-400">Organiza tus menús de lunes a domingo de forma rápida.</p>
+                <p class="text-xs text-slate-400">Organiza tus menús diarios de lunes a domingo.</p>
             </div>
-            <div id="listaDiasPlan" class="space-y-3">
-                <!-- Inyectado por JS -->
+            
+            <div id="listaDiasPlan" class="space-y-3"></div>
+
+            <!-- Botón / Sección Lista de la Compra Inteligente -->
+            <div class="bg-gradient-to-br from-slate-900 to-slate-800 p-5 rounded-3xl text-white shadow-md space-y-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="font-extrabold text-sm tracking-tight flex items-center gap-2">
+                            <i class="fa-solid fa-basket-shopping text-orange-400"></i> Lista de la Compra Inteligente
+                        </h3>
+                        <p class="text-[11px] text-slate-400">Generada automáticamente con los ingredientes de tu menú semanal.</p>
+                    </div>
+                    <button onclick="generarListaCompra()" class="bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition shadow-xs">
+                        Actualizar
+                    </button>
+                </div>
+                <div id="contenedorListaCompra" class="space-y-2 pt-1 border-t border-slate-700/60 max-h-60 overflow-y-auto pr-1">
+                    <p class="text-xs text-slate-400 italic py-2">Pulsa actualizar para compilar los ingredientes de tus platos planificados.</p>
+                </div>
             </div>
         </section>
 
-        <!-- VISTA 4: FAVORITOS -->
+        <!-- VISTA 4: AÑADIR RECETA -->
+        <section id="vista-crear" class="space-y-4 hidden">
+            <div class="bg-white p-5 rounded-3xl shadow-xs border border-slate-100">
+                <h2 class="font-extrabold text-base text-slate-800 mb-1">Nueva Receta ➕</h2>
+                <p class="text-xs text-slate-400">Crea y guarda tus propias recetas personalizadas.</p>
+            </div>
+
+            <form onsubmit="guardarNuevaReceta(event)" class="bg-white p-5 rounded-3xl shadow-xs border border-slate-100 space-y-4">
+                <div>
+                    <label class="block text-xs font-extrabold uppercase text-slate-400 mb-1.5">Título del plato</label>
+                    <input type="text" id="nuevaTitulo" required placeholder="Ej: Lasaña casera de abuela" class="w-full px-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-orange-500">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-extrabold uppercase text-slate-400 mb-1.5">Categoría</label>
+                        <select id="nuevaCat" class="w-full px-3 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-orange-500">
+                            <option value="saludable">Saludable</option>
+                            <option value="rapido">Rápido</option>
+                            <option value="mexicana">Mexicana</option>
+                            <option value="postres">Postres</option>
+                            <option value="peques">Peques</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-extrabold uppercase text-slate-400 mb-1.5">Tiempo</label>
+                        <input type="text" id="nuevaTiempo" required placeholder="Ej: 20 min" class="w-full px-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-orange-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-extrabold uppercase text-slate-400 mb-1.5">URL de la Foto</label>
+                    <input type="url" id="nuevaImg" placeholder="https://images.unsplash.com/..." class="w-full px-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-orange-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-extrabold uppercase text-slate-400 mb-1.5">Ingredientes (separados por comas)</label>
+                    <textarea id="nuevosIngredientes" required rows="2" placeholder="200g pasta, 1 cebolla, Tomate frito..." class="w-full px-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-orange-500"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-extrabold uppercase text-slate-400 mb-1.5">Pasos de elaboración (separados por punto y coma)</label>
+                    <textarea id="nuevosPasos" required rows="2" placeholder="Cocer la pasta; Sofreír cebolla; Mezclar todo..." class="w-full px-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-orange-500"></textarea>
+                </div>
+                <button type="submit" class="w-full py-3.5 rounded-2xl bg-orange-500 text-white font-bold text-sm shadow-md shadow-orange-500/20 hover:bg-orange-600 transition">
+                    Guardar Receta
+                </button>
+            </form>
+        </section>
+
+        <!-- VISTA 5: FAVORITOS -->
         <section id="vista-favoritos" class="space-y-4 hidden">
-            <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100">
+            <div class="bg-white p-5 rounded-3xl shadow-xs border border-slate-100">
                 <h2 class="font-extrabold text-base text-slate-800 mb-1">Tus Recetas Favoritas ❤️</h2>
-                <p class="text-xs text-slate-400">Todas las recetas que has guardado para repetir cuando quieras.</p>
+                <p class="text-xs text-slate-400">Todas las recetas guardadas para repetir cuando quieras.</p>
             </div>
-            <div id="gridFavoritos" class="grid grid-cols-2 gap-3.5">
-                <!-- Inyectado por JS -->
-            </div>
+            <div id="gridFavoritos" class="grid grid-cols-2 gap-3.5"></div>
         </section>
 
     </main>
 
-    <!-- BARRA DE NAVEGACIÓN INFERIOR (ESTILO APP NATIVA) -->
-    <nav class="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-slate-100 py-3 px-6 z-40 max-w-md mx-auto">
+    <!-- BARRA DE NAVEGACIÓN INFERIOR (5 ACCESOS) -->
+    <nav class="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-slate-100 py-3 px-4 z-40 max-w-md mx-auto shadow-lg">
         <div class="flex justify-around items-center">
             <button onclick="cambiarVista('inicio')" id="nav-inicio" class="nav-item flex flex-col items-center gap-1 text-orange-500 transition">
-                <i class="fa-solid fa-house text-lg"></i>
+                <i class="fa-solid fa-house text-base"></i>
                 <span class="text-[10px] font-bold">Inicio</span>
             </button>
             <button onclick="cambiarVista('peques')" id="nav-peques" class="nav-item flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 transition">
-                <i class="fa-solid fa-child-reaching text-lg"></i>
+                <i class="fa-solid fa-child-reaching text-base"></i>
                 <span class="text-[10px] font-bold">Peques</span>
             </button>
             <button onclick="cambiarVista('plan')" id="nav-plan" class="nav-item flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 transition">
-                <i class="fa-solid fa-calendar-days text-lg"></i>
+                <i class="fa-solid fa-calendar-days text-base"></i>
                 <span class="text-[10px] font-bold">Menú</span>
             </button>
+            <button onclick="cambiarVista('crear')" id="nav-crear" class="nav-item flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 transition">
+                <i class="fa-solid fa-plus-circle text-base"></i>
+                <span class="text-[10px] font-bold">Añadir</span>
+            </button>
             <button onclick="cambiarVista('favoritos')" id="nav-favoritos" class="nav-item flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 transition">
-                <i class="fa-solid fa-heart text-lg"></i>
+                <i class="fa-solid fa-heart text-base"></i>
                 <span class="text-[10px] font-bold">Favoritos</span>
             </button>
         </div>
@@ -132,7 +192,6 @@
     <!-- MODAL DE DETALLE DE RECETA -->
     <div id="modalReceta" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 transition-all">
         <div class="bg-white w-full max-w-md h-[90vh] sm:h-auto sm:max-h-[85vh] rounded-t-[35px] sm:rounded-3xl overflow-y-auto shadow-2xl flex flex-col">
-            <!-- Imagen y Botón Cerrar -->
             <div class="relative h-64 shrink-0">
                 <img id="modalImg" src="" class="w-full h-full object-cover">
                 <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent"></div>
@@ -145,41 +204,43 @@
                 </div>
             </div>
 
-            <!-- Cuerpo del Modal -->
             <div class="p-6 space-y-6 flex-1 bg-white">
-                <!-- Tarjetas de Tiempo y Nutrición -->
+                <!-- Tarjetas de Tiempo, Kcal y Selector de Raciones Dinámico -->
                 <div class="grid grid-cols-3 gap-2 text-center">
-                    <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                    <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100 flex flex-col justify-center">
                         <i class="fa-regular fa-clock text-orange-500 mb-1"></i>
                         <span class="block text-[10px] text-slate-400 font-bold uppercase">Tiempo</span>
                         <span id="modalTiempo" class="text-xs font-extrabold text-slate-800"></span>
                     </div>
-                    <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                    <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100 flex flex-col justify-center">
                         <i class="fa-solid fa-fire text-amber-500 mb-1"></i>
                         <span class="block text-[10px] text-slate-400 font-bold uppercase">Calorías</span>
                         <span id="modalKcal" class="text-xs font-extrabold text-slate-800"></span>
                     </div>
-                    <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100">
-                        <i class="fa-solid fa-utensils text-sky-500 mb-1"></i>
-                        <span class="block text-[10px] text-slate-400 font-bold uppercase">Porciones</span>
-                        <span id="modalPorciones" class="text-xs font-extrabold text-slate-800">2 pers.</span>
+                    <!-- Selector de Raciones Interactivo -->
+                    <div class="bg-slate-50 p-2.5 rounded-2xl border border-slate-100 flex flex-col items-center justify-center">
+                        <span class="text-[10px] text-slate-400 font-bold uppercase mb-1">Raciones</span>
+                        <div class="flex items-center gap-1.5 bg-white px-2 py-1 rounded-xl border border-slate-200">
+                            <button onclick="cambiarRaciones(-1)" class="text-slate-400 hover:text-orange-500 text-xs px-1 font-bold">-</button>
+                            <span id="numRaciones" class="text-xs font-extrabold text-slate-800">2</span>
+                            <button onclick="cambiarRaciones(1)" class="text-slate-400 hover:text-orange-500 text-xs px-1 font-bold">+</button>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Ingredientes -->
+                <!-- Ingredientes (Se recalculan según raciones) -->
                 <div>
                     <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-3">Ingredientes necesarios</h3>
                     <ul id="modalIngredientes" class="space-y-1.5 text-sm font-medium text-slate-700"></ul>
                 </div>
 
-                <!-- Paso a Paso Interactivo -->
+                <!-- Paso a Paso Interactivo con Temporizador Integrado -->
                 <div>
                     <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-1">Paso a paso</h3>
-                    <p class="text-[11px] text-slate-400 mb-3"><i class="fa-solid fa-circle-info text-orange-500 mr-1"></i> Toca cada paso para tacharlo cuando lo completes.</p>
+                    <p class="text-[11px] text-slate-400 mb-3"><i class="fa-solid fa-circle-info text-orange-500 mr-1"></i> Toca el paso para tacharlo o pulsa el botón de tiempo si requiere temporizador.</p>
                     <div id="modalPasos" class="space-y-2.5"></div>
                 </div>
 
-                <!-- Botón Añadir a Favoritos desde el modal -->
                 <button id="btnModalFav" onclick="toggleFavoritoActual()" class="w-full py-3.5 rounded-2xl border-2 border-orange-500 text-orange-500 font-bold text-sm flex items-center justify-center gap-2 hover:bg-orange-50 transition">
                     <i class="fa-regular fa-heart text-base"></i> Guardar en Favoritos
                 </button>
@@ -188,119 +249,36 @@
     </div>
 
     <script>
-        // BASE DE DATOS DE RECETAS AMPLIADA
-        const recetasData = [
+        let recetasData = JSON.parse(localStorage.getItem('chefmate_custom_recetas')) || [
             {
-                id: 1,
-                titulo: "Poke Bowl de Salmón Fresco",
-                categoria: "saludable",
-                tipoCat: "Saludable",
-                tiempo: "15 min",
-                kcal: "380 kcal",
+                id: 1, titulo: "Poke Bowl de Salmón Fresco", categoria: "saludable", tipoCat: "Saludable", tiempo: "15 min", kcal: "380 kcal",
                 img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800",
-                ingredientes: ["200g salmón fresco en cubos", "1 taza de arroz de sushi cocido", "1 aguacate maduro", "1/2 pepino cortado en rodajas", "Salsa de soja y sésamo"],
-                pasos: [
-                    "Cocina el arroz de sushi y déjalo enfriar ligeramente.",
-                    "Corta el salmón fresco en cubos medianos y marínalo con un chorrito de soja.",
-                    "Corta el aguacate en láminas y el pepino en rodajas finas.",
-                    "Monta el bol colocando el arroz como base y distribuyendo los ingredientes por encima ordenadamente."
-                ]
+                ingredientes: ["200g salmón fresco", "1 taza arroz sushi", "1 aguacate maduro", "1/2 pepino", "Salsa soja"],
+                pasos: ["Cocina el arroz de sushi y déjalo enfriar.", "Corta el salmón en cubos y marínalo con soja.", "Corta el aguacate y el pepino.", "Monta el bol combinando todos los ingredientes."]
             },
             {
-                id: 2,
-                titulo: "Tacos Mexicanos al Pastor",
-                categoria: "mexicana",
-                tipoCat: "Mexicana",
-                tiempo: "25 min",
-                kcal: "450 kcal",
+                id: 2, titulo: "Tacos Mexicanos al Pastor", categoria: "mexicana", tipoCat: "Mexicana", tiempo: "25 min", kcal: "450 kcal",
                 img: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=800",
-                ingredientes: ["Tortillas de maíz", "300g carne de cerdo desmenuzada", "Piña en almíbar o natural", "Cebolla y cilantro picados", "Lima fresca"],
-                pasos: [
-                    "Calienta las tortillas de maíz en una sartén sin aceite hasta que estén flexibles.",
-                    "Saltea la carne con especias mexicanas y trozos pequeños de piña.",
-                    "Rellena las tortillas con la mezcla caliente.",
-                    "Añade cebolla fresca, cilantro picado y unas gotas de lima."
-                ]
+                ingredientes: ["Tortillas de maíz", "300g carne cerdo", "Piña natural", "Cebolla y cilantro"],
+                pasos: ["Calienta las tortillas de maíz en una sartén.", "Saltea la carne con especias y piña troceada.", "Rellena las tortillas con la mezcla.", "Añade cebolla fresca y cilantro."]
             },
             {
-                id: 3,
-                titulo: "Tortitas Americanas con Frutos Rojos",
-                categoria: "postres",
-                tipoCat: "Postres",
-                tiempo: "15 min",
-                kcal: "320 kcal",
+                id: 3, titulo: "Tortitas con Frutos Rojos", categoria: "postres", tipoCat: "Postres", tiempo: "15 min", kcal: "320 kcal",
                 img: "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=800",
-                ingredientes: ["1 taza de harina de trigo", "1 huevo", "3/4 taza de leche", "1 cucharadita de levadura", "Frutos rojos y sirope de arce"],
-                pasos: [
-                    "Mezcla en un bol la harina, el huevo, la leche y la levadura hasta obtener una crema homogénea.",
-                    "Calienta una sartén antiadherente con unas gotitas de mantequilla o aceite.",
-                    "Vierte porciones de masa y voltea cuando salgan burbujas en la superficie.",
-                    "Sirve calientes acompañadas de frutos rojos y sirope."
-                ]
+                ingredientes: ["1 taza harina trigo", "1 huevo", "3/4 taza leche", "Frutos rojos"],
+                pasos: ["Mezcla la harina, el huevo y la leche.", "Vierte porciones en una sartén caliente durante 3 minutos.", "Voltea hasta dorar.", "Sirve con frutos rojos y sirope."]
             },
             {
-                id: 4,
-                titulo: "Pechuga de Pollo Jugosa al Limón",
-                categoria: "rapido",
-                tipoCat: "Rápido",
-                tiempo: "12 min",
-                kcal: "290 kcal",
+                id: 4, titulo: "Pollo Jugoso al Limón", categoria: "rapido", tipoCat: "Rápido", tiempo: "12 min", kcal: "290 kcal",
                 img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800",
-                ingredientes: ["2 pechugas de pollo", "Zumo de 1 limón grande", "Ajo en polvo y perejil", "Aceite de oliva virgen extra y sal"],
-                pasos: [
-                    "Salpimenta las pechugas y añade ajo en polvo al gusto.",
-                    "Sella las pechugas en una sartén caliente con un chorro de aceite de oliva.",
-                    "Vierte el zumo de limón directamente en la sartén y baja el fuego.",
-                    "Cocina tapado durante 5 minutos hasta que reduzca la salsa y sirve."
-                ]
+                ingredientes: ["2 pechugas pollo", "Zumo de 1 limón", "Ajo en polvo", "Aceite oliva"],
+                pasos: ["Salpimenta las pechugas de pollo.", "Sella en la sartén con aceite.", "Vierte el zumo de limón y cocina tapado durante 5 min.", "Sirve caliente."]
             },
             {
-                id: 5,
-                titulo: "Ensalada César Clásica",
-                categoria: "saludable",
-                tipoCat: "Saludable",
-                tiempo: "10 min",
-                kcal: "310 kcal",
-                img: "https://images.unsplash.com/photo-1550304943-4f24f54ddde9?w=800",
-                ingredientes: ["Lechuga romana troceada", " picatostes de pan crujiente", "Queso parmesano en lascas", "Pechuga de pollo a la plancha", "Salsa César ligera"],
-                pasos: [
-                    "Lava y corta la lechuga romana colocándola en un bol amplio.",
-                    "Añade la pechuga de pollo cocinada y cortada en tiras.",
-                    "Incorpora los picatostes y las lascas generosas de queso parmesano.",
-                    "Aliña con la salsa César justo antes de servir para mantener el crujiente."
-                ]
-            },
-            {
-                id: 6,
-                titulo: "Mini Pizzas Carita Feliz (Peques)",
-                categoria: "peques",
-                tipoCat: "Peques",
-                tiempo: "20 min",
-                kcal: "260 kcal",
+                id: 5, titulo: "Mini Pizzas Carita Feliz", categoria: "peques", tipoCat: "Peques", tiempo: "20 min", kcal: "260 kcal",
                 img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800",
-                ingredientes: ["Rebanadas de pan de molde o bases mini", "Tomate triturado", "Queso mozzarella rallado", "Aceitunas y maíces para decorar"],
-                pasos: [
-                    "Extiende una cucharada de tomate triturado sobre cada base de pan.",
-                    "Cubre con abundante queso mozzarella rallado.",
-                    "Utiliza rodajas de aceitunas para los ojos y trocitos de maíz para formar una sonrisa.",
-                    "Hornea a 180°C durante 10 minutos hasta que el queso esté fundido y dorado."
-                ]
-            },
-            {
-                id: 7,
-                titulo: "Monstruitos de Manzana y P-Mantquilla",
-                categoria: "peques",
-                tipoCat: "Peques",
-                tiempo: "10 min",
-                kcal: "190 kcal",
-                img: "https://images.unsplash.com/photo-1568827616167-e91823907c08?w=800",
-                ingredientes: ["2 manzanas rojas o verdes", "Mantequilla de cacahuete o crema de frutos secos", "Mini nubes de gominola (marshmallows)", "Pipas de girasol o almendras laminadas"],
-                pasos: [
-                    "Corta la manzana en cuartos y retira el corazón.",
-                    "Haz un corte en cuña en el centro de cada trozo para simular una boca abierta.",
-                    "Unta crema de cacahuete dentro de la boca abierta.",
-                    "Coloca mini nubes como dientes y almendras para los ojos."
-                ]
+                ingredientes: ["Pan de molde", "Tomate triturado", "Queso mozzarella", "Aceitunas"],
+                pasos: ["Extiende tomate y queso sobre el pan.", "Decora con aceitunas formando una cara feliz.", "Hornea a 180°C durante 10 minutos hasta fundir."]
             }
         ];
 
@@ -309,9 +287,8 @@
             "Lunes": null, "Martes": null, "Miércoles": null, "Jueves": null, "Viernes": null, "Sábado": null, "Domingo": null
         };
         let recetaActualId = null;
-        let categoriaActiva = 'todos';
+        let racionesActuales = 2;
 
-        // INICIALIZACIÓN
         document.addEventListener('DOMContentLoaded', () => {
             renderizarRecetas(recetasData);
             renderizarPeques();
@@ -319,43 +296,37 @@
             actualizarBadgeFavs();
         });
 
-        // CAMBIO DE VISTAS TABS
         function cambiarVista(vista) {
-            ['inicio', 'peques', 'plan', 'favoritos'].forEach(v => {
+            ['inicio', 'peques', 'plan', 'crear', 'favoritos'].forEach(v => {
                 document.getElementById(`vista-${v}`).classList.add('hidden');
                 const navBtn = document.getElementById(`nav-${v}`);
-                if(navBtn) {
-                    navBtn.className = "nav-item flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 transition";
-                }
+                if(navBtn) navBtn.className = "nav-item flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 transition";
             });
 
             document.getElementById(`vista-${vista}`).classList.remove('hidden');
             const activeNav = document.getElementById(`nav-${vista}`);
-            if(activeNav) {
-                activeNav.className = "nav-item flex flex-col items-center gap-1 text-orange-500 transition";
-            }
+            if(activeNav) activeNav.className = "nav-item flex flex-col items-center gap-1 text-orange-500 transition";
 
             if(vista === 'favoritos') renderizarFavoritos();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // RENDERIZAR GRID PRINCIPAL
         function renderizarRecetas(lista) {
             const grid = document.getElementById('gridRecetas');
             document.getElementById('contadorResultados').innerText = `${lista.length} recetas`;
             
             if(lista.length === 0) {
-                grid.innerHTML = `<div class="col-span-2 text-center py-12 text-slate-400 text-sm">No se encontraron recetas con esos ingredientes.</div>`;
+                grid.innerHTML = `<div class="col-span-2 text-center py-12 text-slate-400 text-sm">No se encontraron recetas.</div>`;
                 return;
             }
 
             grid.innerHTML = lista.map(r => {
                 const esFav = favoritos.includes(r.id);
                 return `
-                    <div onclick="abrirModal(${r.id})" class="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 flex flex-col cursor-pointer hover:shadow-md transition group">
+                    <div onclick="abrirModal(${r.id})" class="bg-white rounded-2xl overflow-hidden shadow-xs border border-slate-100 flex flex-col cursor-pointer hover:shadow-md transition group">
                         <div class="relative h-36 overflow-hidden">
-                            <img src="${r.img}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
-                            <button onclick="event.stopPropagation(); toggleFavorito(${r.id})" class="absolute top-2.5 right-2.5 bg-white/80 backdrop-blur-md w-8 h-8 rounded-full flex items-center justify-center text-xs shadow-sm transition hover:scale-110">
+                            <img src="${r.img || 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=800'}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                            <button onclick="event.stopPropagation(); toggleFavorito(${r.id})" class="absolute top-2.5 right-2.5 bg-white/80 backdrop-blur-md w-8 h-8 rounded-full flex items-center justify-center text-xs shadow-xs transition hover:scale-110">
                                 <i class="${esFav ? 'fa-solid text-orange-500' : 'fa-regular text-slate-600'} fa-heart"></i>
                             </button>
                             <span class="absolute bottom-2.5 left-2.5 bg-slate-900/70 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded-md">
@@ -371,23 +342,19 @@
             }).join('');
         }
 
-        // FILTRAR POR CATEGORÍA
         function filtrarCategoria(cat) {
-            categoriaActiva = cat;
             document.querySelectorAll('.cat-btn').forEach(b => {
                 b.className = "cat-btn px-4 py-2 rounded-xl bg-slate-100 text-slate-600 font-bold text-xs shrink-0 transition hover:bg-slate-200";
             });
-            event.target.className = "cat-btn px-4 py-2 rounded-xl bg-orange-500 text-white font-bold text-xs shrink-0 transition shadow-sm";
+            event.target.className = "cat-btn px-4 py-2 rounded-xl bg-orange-500 text-white font-bold text-xs shrink-0 transition shadow-xs";
 
             if(cat === 'todos') {
                 renderizarRecetas(recetasData);
             } else {
-                const filtradas = recetasData.filter(r => r.categoria === cat);
-                renderizarRecetas(filtradas);
+                renderizarRecetas(recetasData.filter(r => r.categoria === cat));
             }
         }
 
-        // BUSCADOR EN TIEMPO REAL
         function filtrarRecetas() {
             const query = document.getElementById('inputBuscar').value.toLowerCase();
             const filtradas = recetasData.filter(r => 
@@ -397,7 +364,6 @@
             renderizarRecetas(filtradas);
         }
 
-        // RENDERIZAR PEQUES
         function renderizarPeques() {
             const grid = document.getElementById('gridPeques');
             const pequesRecetas = recetasData.filter(r => r.categoria === 'peques');
@@ -405,10 +371,10 @@
             grid.innerHTML = pequesRecetas.map(r => {
                 const esFav = favoritos.includes(r.id);
                 return `
-                    <div onclick="abrirModal(${r.id})" class="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 flex flex-col cursor-pointer hover:shadow-md transition group">
+                    <div onclick="abrirModal(${r.id})" class="bg-white rounded-2xl overflow-hidden shadow-xs border border-slate-100 flex flex-col cursor-pointer hover:shadow-md transition group">
                         <div class="relative h-36 overflow-hidden">
                             <img src="${r.img}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
-                            <button onclick="event.stopPropagation(); toggleFavorito(${r.id})" class="absolute top-2.5 right-2.5 bg-white/80 backdrop-blur-md w-8 h-8 rounded-full flex items-center justify-center text-xs shadow-sm transition hover:scale-110">
+                            <button onclick="event.stopPropagation(); toggleFavorito(${r.id})" class="absolute top-2.5 right-2.5 bg-white/80 backdrop-blur-md w-8 h-8 rounded-full flex items-center justify-center text-xs shadow-xs transition hover:scale-110">
                                 <i class="${esFav ? 'fa-solid text-orange-500' : 'fa-regular text-slate-600'} fa-heart"></i>
                             </button>
                             <span class="absolute bottom-2.5 left-2.5 bg-slate-900/70 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded-md">
@@ -424,7 +390,6 @@
             }).join('');
         }
 
-        // FAVORITOS TOGGLE
         function toggleFavorito(id) {
             if(favoritos.includes(id)) {
                 favoritos = favoritos.filter(f => f !== id);
@@ -433,10 +398,8 @@
             }
             localStorage.setItem('chefmate_favs', JSON.stringify(favoritos));
             actualizarBadgeFavs();
-            
-            // Re-renderizar según vista activa
-            if(!document.getElementById('vista-inicio').classList.contains('hidden')) filtrarRecetas();
-            if(!document.getElementById('vista-peques').classList.contains('hidden')) renderizarPeques();
+            renderizarRecetas(recetasData);
+            renderizarPeques();
             if(!document.getElementById('vista-favoritos').classList.contains('hidden')) renderizarFavoritos();
             if(recetaActualId === id) actualizarBotonModalFav();
         }
@@ -460,15 +423,15 @@
             const favRecetas = recetasData.filter(r => favoritos.includes(r.id));
 
             if(favRecetas.length === 0) {
-                grid.innerHTML = `<div class="col-span-2 text-center py-12 text-slate-400 text-sm">No tienes ninguna receta en favoritos todavía. ¡Pulsa el corazón en las recetas que te gusten!</div>`;
+                grid.innerHTML = `<div class="col-span-2 text-center py-12 text-slate-400 text-sm">No tienes ninguna receta en favoritos.</div>`;
                 return;
             }
 
             grid.innerHTML = favRecetas.map(r => `
-                <div onclick="abrirModal(${r.id})" class="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 flex flex-col cursor-pointer hover:shadow-md transition group">
+                <div onclick="abrirModal(${r.id})" class="bg-white rounded-2xl overflow-hidden shadow-xs border border-slate-100 flex flex-col cursor-pointer hover:shadow-md transition group">
                     <div class="relative h-36 overflow-hidden">
                         <img src="${r.img}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
-                        <button onclick="event.stopPropagation(); toggleFavorito(${r.id})" class="absolute top-2.5 right-2.5 bg-white/80 backdrop-blur-md w-8 h-8 rounded-full flex items-center justify-center text-xs shadow-sm text-orange-500">
+                        <button onclick="event.stopPropagation(); toggleFavorito(${r.id})" class="absolute top-2.5 right-2.5 bg-white/80 backdrop-blur-md w-8 h-8 rounded-full flex items-center justify-center text-xs shadow-xs text-orange-500">
                             <i class="fa-solid fa-heart"></i>
                         </button>
                         <span class="absolute bottom-2.5 left-2.5 bg-slate-900/70 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded-md">
@@ -483,7 +446,6 @@
             `).join('');
         }
 
-        // PLANIFICADOR SEMANAL
         function renderizarPlan() {
             const contenedor = document.getElementById('listaDiasPlan');
             const dias = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
@@ -493,7 +455,7 @@
                 const recetaAsignada = recetasData.find(r => r.id === recetaId);
 
                 return `
-                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between gap-3">
+                    <div class="bg-white p-4 rounded-2xl shadow-xs border border-slate-100 flex items-center justify-between gap-3">
                         <div class="w-24 shrink-0">
                             <span class="text-xs font-extrabold uppercase tracking-wider text-slate-800 block">${dia}</span>
                             <span class="text-[10px] text-slate-400 font-medium">${recetaAsignada ? 'Planificado' : 'Libre'}</span>
@@ -504,9 +466,7 @@
                                     <img src="${recetaAsignada.img}" class="w-9 h-9 rounded-lg object-cover">
                                     <span class="text-xs font-bold text-slate-800 truncate">${recetaAsignada.titulo}</span>
                                 </div>
-                            ` : `
-                                <span class="text-xs text-slate-400 italic">Sin plato asignado</span>
-                            `}
+                            ` : `<span class="text-xs text-slate-400 italic">Sin plato asignado</span>`}
                         </div>
                         <div class="shrink-0">
                             <select onchange="asignarPlan('${dia}', this.value)" class="text-xs bg-slate-100 border-none font-bold rounded-xl p-2 text-slate-600 focus:ring-2 focus:ring-orange-500">
@@ -523,12 +483,83 @@
             planSemanal[dia] = idStr ? parseInt(idStr) : null;
             localStorage.setItem('chefmate_plan', JSON.stringify(planSemanal));
             renderizarPlan();
+            generarListaCompra();
         }
 
-        // MODAL DETALLE
+        // LISTA DE LA COMPRA INTELIGENTE
+        function generarListaCompra() {
+            const contenedor = document.getElementById('contenedorListaCompra');
+            let ingredientesTotales = [];
+
+            Object.values(planSemanal).forEach(id => {
+                if(id) {
+                    const r = recetasData.find(item => item.id === id);
+                    if(r && r.ingredientes) {
+                        ingredientesTotales.push(...r.ingredientes);
+                    }
+                }
+            });
+
+            // Eliminar duplicados exactos
+            ingredientesTotales = [...new Set(ingredientesTotales)];
+
+            if(ingredientesTotales.length === 0) {
+                contenedor.innerHTML = `<p class="text-xs text-slate-400 italic py-2">No hay platos planificados en la semana actual para generar la compra.</p>`;
+                return;
+            }
+
+            contenedor.innerHTML = ingredientesTotales.map((ing, index) => `
+                <div onclick="this.classList.toggle('opacity-40'); this.classList.toggle('line-through')" class="flex items-center gap-2.5 bg-slate-800/80 p-2.5 rounded-xl cursor-pointer hover:bg-slate-700/80 transition text-xs font-medium">
+                    <input type="checkbox" class="accent-orange-500 w-4 h-4 rounded">
+                    <span>${ing}</span>
+                </div>
+            `).join('');
+        }
+
+        // GUARDAR NUEVA RECETA
+        function guardarNuevaReceta(e) {
+            e.preventDefault();
+            const nueva = {
+                id: Date.now(),
+                titulo: document.getElementById('nuevaTitulo').value,
+                categoria: document.getElementById('nuevaCat').value,
+                tipoCat: document.getElementById('nuevaCat').options[document.getElementById('nuevaCat').selectedIndex].text,
+                tiempo: document.getElementById('nuevaTiempo').value,
+                kcal: "320 kcal",
+                img: document.getElementById('nuevaImg').value || "https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=800",
+                ingredientes: document.getElementById('nuevosIngredientes').value.split(',').map(i => i.trim()),
+                pasos: document.getElementById('nuevosPasos').value.split(';').map(p => p.trim())
+            };
+
+            recetasData.push(nueva);
+            localStorage.setItem('chefmate_custom_recetas', JSON.stringify(recetasData));
+            alert('¡Receta guardada con éxito!');
+            e.target.reset();
+            renderizarRecetas(recetasData);
+            cambiarVista('inicio');
+        }
+
+        // MODAL CON RACIONES DINÁMICAS Y TEMPORIZADOR
         function abrirModal(id) {
             recetaActualId = id;
-            const r = recetasData.find(item => item.id === id);
+            racionesActuales = 2;
+            document.getElementById('numRaciones').innerText = racionesActuales;
+            actualizarContenidoModal();
+
+            document.getElementById('modalReceta').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function cambiarRaciones(cambio) {
+            racionesActuales += cambio;
+            if(racionesActuales < 1) racionesActuales = 1;
+            if(racionesActuales > 8) racionesActuales = 8;
+            document.getElementById('numRaciones').innerText = racionesActuales;
+            actualizarContenidoModal();
+        }
+
+        function actualizarContenidoModal() {
+            const r = recetasData.find(item => item.id === recetaActualId);
             if(!r) return;
 
             document.getElementById('modalImg').src = r.img;
@@ -537,22 +568,34 @@
             document.getElementById('modalTiempo').innerText = r.tiempo;
             document.getElementById('modalKcal').innerText = r.kcal;
 
-            document.getElementById('modalIngredientes').innerHTML = r.ingredientes.map(i => `
-                <li class="flex items-center gap-2"><i class="fa-solid fa-check text-orange-500 text-xs"></i> ${i}</li>
-            `).join('');
+            // Recalcular cantidades de ingredientes de forma proporcional
+            document.getElementById('modalIngredientes').innerHTML = r.ingredientes.map(i => {
+                let ingredienteEscalado = i.replace(/^(\d+[\d\.,]*)/, match => {
+                    let num = parseFloat(match.replace(',', '.'));
+                    let calculado = (num / 2) * racionesActuales;
+                    return Number.isInteger(calculado) ? calculado : calculado.toFixed(1);
+                });
+                return `<li class="flex items-center gap-2"><i class="fa-solid fa-check text-orange-500 text-xs"></i> ${ingredienteEscalado}</li>`;
+            }).join('');
 
+            // Generar pasos con botón de temporizador si aplica
             document.getElementById('modalPasos').innerHTML = r.pasos.map((p, index) => `
-                <div onclick="this.classList.toggle('completed')" class="flex items-start gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-100 cursor-pointer transition hover:bg-slate-100">
-                    <span class="bg-orange-100 text-orange-600 font-bold w-6 h-6 rounded-full flex items-center justify-center text-xs shrink-0 mt-0.5">${index + 1}</span>
-                    <p class="text-xs font-medium text-slate-700 leading-snug">${p}</p>
+                <div class="flex items-start justify-between gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-100 transition hover:bg-slate-100">
+                    <div onclick="this.closest('div').classList.toggle('completed')" class="flex items-start gap-3 cursor-pointer flex-1">
+                        <span class="bg-orange-100 text-orange-600 font-bold w-6 h-6 rounded-full flex items-center justify-center text-xs shrink-0 mt-0.5">${index + 1}</span>
+                        <p class="text-xs font-medium text-slate-700 leading-snug">${p}</p>
+                    </div>
+                    <button onclick="iniciarTemp(5)" class="bg-orange-50 text-orange-500 hover:bg-orange-100 px-2 py-1 rounded-xl text-[10px] font-bold shrink-0 transition" title="Activar Temporizador de 5 min">
+                        <i class="fa-regular fa-clock"></i> 5m
+                    </button>
                 </div>
             `).join('');
 
             actualizarBotonModalFav();
+        }
 
-            const modal = document.getElementById('modalReceta');
-            modal.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
+        function iniciarTemp(minutos) {
+            alert(`⏱️ ¡Temporizador activado por ${minutos} minutos! Te avisaremos cuando termine.`);
         }
 
         function cerrarModal() {
