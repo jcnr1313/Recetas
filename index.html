@@ -24,7 +24,7 @@
     <header class="bg-white/85 backdrop-blur-md px-5 py-4 sticky top-0 z-30 border-b border-slate-100 flex justify-between items-center shadow-xs">
         <div>
             <h1 class="text-xl font-extrabold tracking-tight text-slate-900">ChefMate <span class="text-orange-500">Pro+</span></h1>
-            <p class="text-xs text-slate-400 font-medium">IA, TikTok Trends y Efectos Interactivos</p>
+            <p class="text-xs text-slate-400 font-medium">IA, Nevera Inteligente y TikTok Trends</p>
         </div>
         <div class="flex items-center gap-2">
             <button onclick="cambiarVista('favoritos')" class="w-10 h-10 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center hover:bg-orange-100 transition relative">
@@ -37,8 +37,33 @@
     <!-- CONTENEDOR PRINCIPAL DE VISTAS -->
     <main class="max-w-md mx-auto p-4 space-y-6">
 
-        <!-- VISTA 1: INICIO / BUSCADOR & TIKTOK TRENDS -->
+        <!-- VISTA 1: INICIO / BUSCADOR, NEVERA & TIKTOK TRENDS -->
         <section id="vista-inicio" class="space-y-5">
+            
+            <!-- WIDGET NUEVO: COCINAR CON LO QUE TENGO (NEVERA) -->
+            <div class="bg-gradient-to-br from-orange-500 to-amber-500 p-5 rounded-3xl text-white shadow-md space-y-3">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-extrabold text-sm tracking-tight flex items-center gap-2">
+                        <i class="fa-solid fa-utensils"></i> ¿Qué hay en tu nevera?
+                    </h3>
+                    <span class="bg-white/20 text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase">Filtro IA</span>
+                </div>
+                <p class="text-xs text-orange-100 font-medium">Escribe lo que tienes por casa y te diremos qué cocinar:</p>
+                
+                <div class="space-y-2">
+                    <input type="text" id="inputNevera" placeholder="Ej: salmón, arroz, aguacate, tomate..." 
+                        class="w-full px-4 py-3 rounded-2xl bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-300 font-medium text-xs shadow-inner">
+                    <div class="flex gap-2">
+                        <button onclick="buscarConIngredientesNevera()" class="flex-1 bg-slate-900 hover:bg-slate-800 text-white py-2.5 rounded-xl text-xs font-extrabold shadow-sm transition">
+                            <i class="fa-solid fa-wand-magic-sparkles mr-1 text-orange-400"></i> Cocinar con esto
+                        </button>
+                        <button onclick="limpiarFiltroNevera()" class="bg-white/20 hover:bg-white/30 text-white px-3.5 py-2.5 rounded-xl text-xs font-bold transition">
+                            Limpiar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <div class="bg-white p-4 rounded-3xl shadow-xs border border-slate-100 space-y-3">
                 <div class="relative">
                     <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
@@ -295,7 +320,6 @@
             osc.start(now);
             osc.stop(now + 0.3);
             
-            // Lanzar Confeti visual festivo
             confetti({
                 particleCount: 40,
                 spread: 60,
@@ -314,7 +338,7 @@
             {
                 id: 2, titulo: "Feta Pasta Viral (TikTok)", categoria: "tiktok", tipoCat: "TikTok Viral", tiempo: "20 min", kcal: "510 kcal",
                 img: "https://images.unsplash.com/photo-1621996346565-e3d5d6281296?w=800",
-                ingredientes: ["400g pasta cherry", "1 bloque queso feta", "Tomates cherry", "Albahaca fresca", "Ajo y aceite"],
+                ingredientes: ["400g pasta", "1 bloque queso feta", "Tomates cherry", "Albahaca fresca", "Ajo y aceite"],
                 pasos: ["Coloca el bloque de queso feta en una bandeja de horno rodeado de tomates cherry.", "Añade aceite de oliva, sal, pimienta y albahaca.", "Hornea a 200°C durante 20 minutos.", "Maja todo y mezcla con la pasta cocida."]
             },
             {
@@ -373,6 +397,37 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
+        // --- FILTRO INTELIGENTE DE NEVERA ---
+        function buscarConIngredientesNevera() {
+            reproducirSonidoExito();
+            const textoInput = document.getElementById('inputNevera').value.toLowerCase().trim();
+            if(!textoInput) {
+                alert("Por favor, escribe al menos un ingrediente que tengas en la nevera.");
+                return;
+            }
+
+            // Separar por comas los ingredientes ingresados por el usuario
+            const ingredientesUsuario = textoInput.split(',').map(i => i.trim()).filter(i => i.length > 0);
+
+            // Filtrar recetas cuya lista de ingredientes contenga alguno de los introducidos
+            const filtradas = recetasData.filter(r => {
+                return r.ingredientes.some(ingReceta => {
+                    const ingLower = ingReceta.toLowerCase();
+                    return ingredientesUsuario.some(userIng => ingLower.includes(userIng));
+                });
+            });
+
+            renderizarRecetas(filtradas);
+            // Hacer scroll suave hacia los resultados
+            document.getElementById('gridRecetas').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function limpiarFiltroNevera() {
+            reproducirSonidoClick();
+            document.getElementById('inputNevera').value = '';
+            renderizarRecetas(recetasData);
+        }
+
         // --- SINCRONIZADOR DE TIKTOK AUTOMÁTICO ---
         function sincronizarTikTok() {
             reproducirSonidoExito();
@@ -391,7 +446,6 @@
                 }
             ];
 
-            // Evitar duplicados exactos y fusionar
             nuevasTikTok.forEach(nT => {
                 if(!recetasData.some(r => r.titulo === nT.titulo)) {
                     recetasData.unshift(nT);
@@ -408,7 +462,7 @@
             document.getElementById('contadorResultados').innerText = `${lista.length} recetas`;
             
             if(lista.length === 0) {
-                grid.innerHTML = `<div class="col-span-2 text-center py-12 text-slate-400 text-sm">No se encontraron recetas.</div>`;
+                grid.innerHTML = `<div class="col-span-2 text-center py-12 text-slate-400 text-sm">No se encontraron recetas con esos ingredientes en la base de datos. ¡Prueba a añadir una nueva!</div>`;
                 return;
             }
 
