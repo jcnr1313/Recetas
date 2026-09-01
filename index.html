@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Control de Defectos OCA</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style> 
         body { font-family: 'Inter', sans-serif; } 
@@ -40,17 +41,19 @@
                 </div>
             </div>
             
-            <div class="flex items-center gap-2.5 w-full sm:w-auto justify-end flex-wrap">
-                <button onclick="shareWhatsApp()" title="Enviar listado por WhatsApp" class="flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-xl bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-600/30 hover:border-emerald-500 transition-all active:scale-95 shadow-sm">
+            <div class="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap">
+                <button onclick="downloadPDF()" title="Descargar listado en PDF" class="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-xl bg-rose-600/20 border border-rose-500/30 text-rose-400 hover:bg-rose-600/30 hover:border-rose-500 transition-all active:scale-95 shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <span>PDF</span>
+                </button>
+                <button onclick="shareWhatsApp()" title="Enviar listado por WhatsApp" class="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-xl bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-600/30 hover:border-emerald-500 transition-all active:scale-95 shadow-sm">
                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
                     <span>WhatsApp</span>
                 </button>
-                <button onclick="exportData()" title="Descargar copia de seguridad" class="flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-indigo-400 hover:bg-slate-800/80 hover:border-slate-700 transition-all active:scale-95 shadow-sm">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                <button onclick="exportData()" title="Descargar copia de seguridad" class="flex items-center gap-1 text-xs font-medium px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-indigo-400 hover:bg-slate-800/80 transition-all">
                     <span>Exportar</span>
                 </button>
-                <label title="Cargar copia de seguridad" class="flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-emerald-400 hover:bg-slate-800/80 hover:border-slate-700 transition-all cursor-pointer active:scale-95 shadow-sm">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                <label title="Cargar copia" class="flex items-center gap-1 text-xs font-medium px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-emerald-400 hover:bg-slate-800/80 cursor-pointer transition-all">
                     <span>Importar</span>
                     <input type="file" id="import-file" accept=".json" class="hidden" onchange="importData(event)">
                 </label>
@@ -74,7 +77,7 @@
             <form id="job-form" class="grid grid-cols-1 md:grid-cols-12 gap-3.5">
                 <input type="hidden" id="edit-index" value="-1">
 
-                <div class="md:col-span-3">
+                <div class="md:col-span-4">
                     <label for="address-input" class="block text-[11px] font-medium text-slate-400 mb-1">Dirección</label>
                     <input type="text" id="address-input" required placeholder="Ej. Calle Principal 12" 
                         class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
@@ -92,40 +95,40 @@
                 </div>
 
                 <div class="md:col-span-2">
-                    <label for="expiry-input" class="block text-[11px] font-medium text-slate-400 mb-1">Fecha Caducidad</label>
+                    <label for="expiry-input" class="block text-[11px] font-medium text-slate-400 mb-1">Caducidad</label>
                     <input type="date" id="expiry-input" 
-                        class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                        class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                 </div>
 
-                <div class="md:col-span-3">
-                    <label for="notes-input" class="block text-[11px] font-medium text-slate-400 mb-1">Notas / Observaciones</label>
-                    <input type="text" id="notes-input" placeholder="Ej. Falta firmar acta" 
+                <div class="md:col-span-2">
+                    <label for="notes-input" class="block text-[11px] font-medium text-slate-400 mb-1">Notas</label>
+                    <input type="text" id="notes-input" placeholder="Ej. Falta acta" 
                         class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                 </div>
 
                 <div class="md:col-span-1 flex items-end">
                     <button type="submit" id="submit-btn" title="Añadir registro"
-                        class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-medium py-2.5 rounded-xl text-sm shadow-lg shadow-indigo-600/30 transition-all active:scale-95 flex items-center justify-center">
+                        class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-medium py-2.5 rounded-xl text-sm shadow-lg shadow-indigo-600/35 transition-all active:scale-95 flex items-center justify-center">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
                     </button>
                 </div>
             </form>
         </section>
 
-        <section class="bg-slate-900/40 border border-slate-800/80 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md">
+        <section id="pdf-content-area" class="bg-slate-900/40 border border-slate-800/80 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md">
             
             <div class="px-5 py-4 border-b border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-3 bg-slate-900/60">
                 <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-300">Listado de Defectos OCA</h3>
                 
                 <div class="flex items-center gap-3 w-full sm:w-auto">
-                    <div class="relative w-full sm:w-64">
+                    <div class="relative w-full sm:w-64 no-print">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                             <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                         </span>
                         <input type="text" id="search-input" placeholder="Buscar dirección o notas..." 
                             class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                     </div>
-                    <button onclick="clearAllJobs()" class="text-xs text-rose-400 hover:text-rose-300 transition-colors font-medium whitespace-nowrap bg-rose-500/10 border border-rose-500/20 px-3 py-1.5 rounded-xl">Borrar todo</button>
+                    <button onclick="clearAllJobs()" class="no-print text-xs text-rose-400 hover:text-rose-300 transition-colors font-medium whitespace-nowrap bg-rose-500/10 border border-rose-500/20 px-3 py-1.5 rounded-xl">Borrar todo</button>
                 </div>
             </div>
             
@@ -137,7 +140,7 @@
                             <th class="py-3 px-5">Estado</th>
                             <th class="py-3 px-5">Caducidad</th>
                             <th class="py-3 px-5">Notas</th>
-                            <th class="py-3 px-5 text-right">Acciones</th>
+                            <th class="py-3 px-5 text-right no-print">Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="job-table-body" class="divide-y divide-slate-800/60 text-sm"></tbody>
@@ -205,7 +208,6 @@
                 const originalIndex = jobs.indexOf(job);
                 const style = statusStyles[job.status] || statusStyles["Otros"];
                 
-                // Formatear y verificar caducidad
                 let expiryHtml = '<span class="text-slate-600 italic text-xs">Sin fecha</span>';
                 if (job.expiryDate) {
                     const isExpired = job.expiryDate < todayStr && job.status !== 'Terminados';
@@ -224,7 +226,7 @@
                 tr.innerHTML = `
                     <td class="py-3.5 px-5 font-medium text-slate-200 text-xs sm:text-sm">
                         <div class="flex items-center gap-2">
-                            <button onclick="toggleDone(${originalIndex})" title="Marcar como hecho / cambiar estado" class="w-4 h-4 rounded border ${job.status === 'Terminados' ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-700 bg-slate-900'} flex items-center justify-center transition-colors">
+                            <button onclick="toggleDone(${originalIndex})" title="Marcar como hecho" class="no-print w-4 h-4 rounded border ${job.status === 'Terminados' ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-700 bg-slate-900'} flex items-center justify-center transition-colors">
                                 ${job.status === 'Terminados' ? '✓' : ''}
                             </button>
                             <span>${escapeHtml(job.address)}</span>
@@ -238,7 +240,7 @@
                     </td>
                     <td class="py-3.5 px-5">${expiryHtml}</td>
                     <td class="py-3.5 px-5 text-slate-400 text-xs">${job.notes ? escapeHtml(job.notes) : '<span class="text-slate-600 italic">Sin notas</span>'}</td>
-                    <td class="py-3.5 px-5 text-right space-x-1">
+                    <td class="py-3.5 px-5 text-right space-x-1 no-print">
                         <button onclick="editJob(${originalIndex})" class="text-slate-500 hover:text-indigo-400 transition-colors p-1.5 rounded-lg hover:bg-indigo-500/10" title="Editar">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                         </button>
@@ -248,6 +250,26 @@
                     </td>
                 `;
                 tbody.appendChild(tr);
+            });
+        }
+
+        function downloadPDF() {
+            const element = document.getElementById('pdf-content-area');
+            // Ocultar temporalmente los botones de acción para que el PDF salga limpio
+            const noPrintElements = document.querySelectorAll('.no-print');
+            noPrintElements.forEach(el => el.style.display = 'none');
+
+            const options = {
+                margin:       10,
+                filename:     `Listado-Defectos-OCA-${new Date().toISOString().slice(0, 10)}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#020617' },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+
+            html2pdf().from(element).set(options).save().then(() => {
+                // Volver a mostrar los elementos ocultos
+                noPrintElements.forEach(el => el.style.display = '');
             });
         }
 
