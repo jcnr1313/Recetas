@@ -10,52 +10,49 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
 
-    <header class="border-b border-slate-800 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
-        <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <div class="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/30">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                </div>
-                <div>
-                    <h1 class="text-lg font-bold tracking-tight text-white">Control Defectos OCA</h1>
-                    <p class="text-xs text-slate-400">Gestión y consulta rápida de direcciones</p>
+    <header class="border-b border-slate-800 bg-slate-950/90 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-start">
+                <div class="flex items-center space-x-3">
+                    <div class="h-9 w-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/30">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    </div>
+                    <div>
+                        <h1 class="text-sm font-bold tracking-tight text-white">Control Defectos OCA</h1>
+                        <p class="text-[10px] text-slate-400" id="counter-badge">0 registros</p>
+                    </div>
                 </div>
             </div>
             
-            <div class="flex items-center gap-3">
-                <button onclick="exportData()" title="Descargar copia de seguridad" class="hidden sm:flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 transition-all">
-                    <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                    Exportar
+            <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <button onclick="exportData()" title="Descargar copia de seguridad" class="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-indigo-400 hover:bg-slate-800 transition-all active:scale-95 shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    <span>Exportar</span>
                 </button>
-                <label title="Cargar copia de seguridad" class="hidden sm:flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 transition-all cursor-pointer">
-                    <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                    Importar
+                <label title="Cargar copia de seguridad" class="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-emerald-400 hover:bg-slate-800 transition-all cursor-pointer active:scale-95 shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                    <span>Importar</span>
                     <input type="file" id="import-file" accept=".json" class="hidden" onchange="importData(event)">
                 </label>
-                <div id="counter-badge" class="text-xs font-medium px-3 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-slate-300 shadow-inner">
-                    0 registros
-                </div>
             </div>
         </div>
     </header>
 
-    <main class="max-w-6xl w-full mx-auto px-6 py-8 flex-grow">
+    <main class="max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 flex-grow">
         
-        <section class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-6 shadow-xl backdrop-blur-sm mb-8">
-            <h2 class="text-sm font-semibold uppercase tracking-wider text-indigo-400 mb-4">Registrar Nuevo Defecto / Dirección</h2>
-            <form id="job-form" class="grid grid-cols-1 md:grid-cols-12 gap-4">
+        <section class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-5 shadow-xl backdrop-blur-sm mb-6">
+            <h2 class="text-xs font-semibold uppercase tracking-wider text-indigo-400 mb-3">Registrar Nuevo Defecto / Dirección</h2>
+            <form id="job-form" class="grid grid-cols-1 md:grid-cols-12 gap-3">
                 
                 <div class="md:col-span-5">
-                    <label for="address-input" class="block text-xs font-medium text-slate-400 mb-1.5">Dirección</label>
+                    <label for="address-input" class="block text-[11px] font-medium text-slate-400 mb-1">Dirección</label>
                     <input type="text" id="address-input" required placeholder="Ej. Calle Principal 12" 
-                        class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                        class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                 </div>
 
                 <div class="md:col-span-3">
-                    <label for="status-input" class="block text-xs font-medium text-slate-400 mb-1.5">Estado</label>
-                    <select id="status-input" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all cursor-pointer">
+                    <label for="status-input" class="block text-[11px] font-medium text-slate-400 mb-1">Estado</label>
+                    <select id="status-input" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all cursor-pointer">
                         <option value="Terminados">Trabajos terminados</option>
                         <option value="Entregado a autónomo">Entregado a autónomo</option>
                         <option value="Sin terminar" selected>Trabajos sin terminar</option>
@@ -64,17 +61,15 @@
                 </div>
 
                 <div class="md:col-span-3">
-                    <label for="notes-input" class="block text-xs font-medium text-slate-400 mb-1.5">Notas / Observaciones</label>
+                    <label for="notes-input" class="block text-[11px] font-medium text-slate-400 mb-1">Notas / Observaciones</label>
                     <input type="text" id="notes-input" placeholder="Ej. Falta firmar acta" 
-                        class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                        class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                 </div>
 
                 <div class="md:col-span-1 flex items-end">
                     <button type="submit" title="Añadir"
-                        class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-medium py-3 rounded-xl text-sm shadow-lg shadow-indigo-600/20 transition-all active:scale-95 flex items-center justify-center">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path>
-                        </svg>
+                        class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-medium py-2.5 rounded-xl text-sm shadow-lg shadow-indigo-600/20 transition-all active:scale-95 flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
                     </button>
                 </div>
             </form>
@@ -82,16 +77,16 @@
 
         <section class="bg-slate-900/40 border border-slate-800/80 rounded-2xl overflow-hidden shadow-xl backdrop-blur-sm">
             
-            <div class="px-6 py-4 border-b border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-900/60">
-                <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-300">Listado de Defectos OCA</h3>
+            <div class="px-5 py-3.5 border-b border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-3 bg-slate-900/60">
+                <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-300">Listado de Defectos OCA</h3>
                 
                 <div class="flex items-center gap-3 w-full sm:w-auto">
-                    <div class="relative w-full sm:w-64">
+                    <div class="relative w-full sm:w-60">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                         </span>
                         <input type="text" id="search-input" placeholder="Buscar dirección..." 
-                            class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                            class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                     </div>
                     <button onclick="clearAllJobs()" class="text-xs text-rose-400 hover:text-rose-300 transition-colors font-medium whitespace-nowrap">Borrar todo</button>
                 </div>
@@ -100,27 +95,27 @@
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="border-b border-slate-800 text-xs font-semibold text-slate-400 uppercase tracking-wider bg-slate-950/40">
-                            <th class="py-3.5 px-6">Dirección</th>
-                            <th class="py-3.5 px-6">Estado</th>
-                            <th class="py-3.5 px-6">Notas</th>
-                            <th class="py-3.5 px-6 text-right">Acciones</th>
+                        <tr class="border-b border-slate-800 text-[11px] font-semibold text-slate-400 uppercase tracking-wider bg-slate-950/40">
+                            <th class="py-3 px-5">Dirección</th>
+                            <th class="py-3 px-5">Estado</th>
+                            <th class="py-3 px-5">Notas</th>
+                            <th class="py-3 px-5 text-right">Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="job-table-body" class="divide-y divide-slate-800/60 text-sm"></tbody>
                 </table>
             </div>
 
-            <div id="empty-state" class="hidden py-16 text-center">
+            <div id="empty-state" class="hidden py-14 text-center">
                 <svg class="w-12 h-12 mx-auto text-slate-700 mb-3" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
-                <p class="text-slate-400 font-medium">No hay registros de defectos OCA</p>
-                <p class="text-xs text-slate-600 mt-1">Añade una dirección arriba para empezar a gestionar</p>
+                <p class="text-slate-400 font-medium text-sm">No hay registros de defectos OCA</p>
+                <p class="text-xs text-slate-600 mt-0.5">Añade una dirección arriba para empezar a gestionar</p>
             </div>
         </section>
     </main>
 
-    <footer class="border-t border-slate-900 py-6 text-center text-xs text-slate-600">
-        <p>Control de Defectos OCA • Exporta tu copia de seguridad periódicamente</p>
+    <footer class="border-t border-slate-900 py-4 text-center text-[11px] text-slate-600">
+        <p>Control de Defectos OCA • Tus datos seguros mediante copias de seguridad locales</p>
     </footer>
 
     <script>
@@ -173,15 +168,15 @@
                 tr.className = "hover:bg-slate-900/40 transition-colors group";
                 
                 tr.innerHTML = `
-                    <td class="py-4 px-6 font-medium text-slate-200">${escapeHtml(job.address)}</td>
-                    <td class="py-4 px-6">
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${style.bg} ${style.text} ${style.border}">
+                    <td class="py-3.5 px-5 font-medium text-slate-200 text-xs sm:text-sm">${escapeHtml(job.address)}</td>
+                    <td class="py-3.5 px-5">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium border ${style.bg} ${style.text} ${style.border} whitespace-nowrap">
                             <span class="h-1.5 w-1.5 rounded-full ${style.dot}"></span>
                             ${job.status}
                         </span>
                     </td>
-                    <td class="py-4 px-6 text-slate-400 text-xs">${job.notes ? escapeHtml(job.notes) : '<span class="text-slate-600 italic">Sin notas</span>'}</td>
-                    <td class="py-4 px-6 text-right">
+                    <td class="py-3.5 px-5 text-slate-400 text-xs">${job.notes ? escapeHtml(job.notes) : '<span class="text-slate-600 italic">Sin notas</span>'}</td>
+                    <td class="py-3.5 px-5 text-right">
                         <button onclick="deleteJob(${originalIndex})" class="text-slate-500 hover:text-rose-400 transition-colors p-1.5 rounded-lg hover:bg-rose-500/10" title="Eliminar">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                         </button>
@@ -191,7 +186,6 @@
             });
         }
 
-        // Funciones de Copia de Seguridad
         function exportData() {
             const data = localStorage.getItem(STORAGE_KEY);
             if (!data || JSON.parse(data).length === 0) {
@@ -216,7 +210,7 @@
                 try {
                     const importedData = JSON.parse(e.target.result);
                     if (Array.isArray(importedData)) {
-                        if (confirm(`¿Estás seguro de importar estos datos? Se fusionarán o reemplazarán los registros actuales.`)) {
+                        if (confirm(`¿Estás seguro de importar estos datos? Se sobrescribirán los registros actuales.`)) {
                             saveJobs(importedData);
                             renderJobs();
                             alert('¡Datos importados con éxito!');
@@ -229,7 +223,7 @@
                 }
             };
             reader.readAsText(file);
-            event.target.value = ''; // Resetear input
+            event.target.value = '';
         }
 
         document.getElementById('job-form').addEventListener('submit', function(e) {
