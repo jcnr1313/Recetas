@@ -6,6 +6,8 @@
     <title>Control de Defectos OCA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- SDK de Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style> 
         body { font-family: 'Inter', sans-serif; } 
@@ -75,7 +77,7 @@
             </div>
             
             <form id="job-form" class="grid grid-cols-1 md:grid-cols-12 gap-3.5">
-                <input type="hidden" id="edit-index" value="-1">
+                <input type="hidden" id="edit-id" value="">
 
                 <div class="md:col-span-4">
                     <label for="address-input" class="block text-[11px] font-medium text-slate-400 mb-1">Dirección</label>
@@ -156,11 +158,16 @@
     </main>
 
     <footer class="border-t border-slate-900 py-4 text-center text-[11px] text-slate-600">
-        <p>Control de Defectos OCA • Desarrollado para gestión técnica avanzada</p>
+        <p>Control de Defectos OCA • Sincronizado con Supabase</p>
     </footer>
 
     <script>
-        const STORAGE_KEY = 'oca_defects_app_data';
+        // Configuración de Supabase
+        const SUPABASE_URL = 'https://tu-proyecto.supabase.co';
+        const SUPABASE_ANON_KEY = 'tu-clave-anonima-aqui';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let cachedJobs = [];
 
         const statusStyles = {
             "Terminados": { bg: "bg-emerald-500/10", text: "text-emerald-400", border: "border-emerald-500/20", dot: "bg-emerald-400" },
@@ -170,17 +177,31 @@
             "Otros": { bg: "bg-sky-500/10", text: "text-sky-400", border: "border-sky-500/20", dot: "bg-sky-400" }
         };
 
-        function getJobs() {
-            const data = localStorage.getItem(STORAGE_KEY);
-            return data ? JSON.parse(data) : [];
+        async function fetchJobs() {
+            const { data, error } = await supabase
+                .from('ocas_inspecciones')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('Error al cargar de Supabase:', error);
+                return [];
+            }
+            
+            // Mapeamos los campos de la BD al formato que usa la app
+            cachedJobs = data.map(item => ({
+                id: item.id,
+                address: item.lugar_instalacion,
+                status: item.estado || 'Sin terminar',
+                expiryDate: item.fecha_inspeccion || '',
+                notes: item.observaciones || ''
+            }));
+            
+            return cachedJobs;
         }
 
-        function saveJobs(jobs) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(jobs));
-        }
-
-        function renderJobs() {
-            const jobs = getJobs();
+        async function renderJobs() {
+            const jobs = await fetchJobs();
             const tbody = document.getElementById('job-table-body');
             const emptyState = document.getElementById('empty-state');
             const counterBadge = document.getElementById('counter-badge');
@@ -205,7 +226,6 @@
             const todayStr = new Date().toISOString().slice(0, 10);
 
             filteredJobs.forEach((job) => {
-                const originalIndex = jobs.indexOf(job);
                 const style = statusStyles[job.status] || statusStyles["Otros"];
                 
                 let expiryHtml = '<span class="text-slate-600 italic text-xs">Sin fecha</span>';
@@ -221,12 +241,12 @@
                 
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-900/40 transition-colors group animate-fade-in";
-                tr.id = `job-row-${originalIndex}`;
+                tr.id = `job-row-${job.id}`;
                 
                 tr.innerHTML = `
                     <td class="py-3.5 px-5 font-medium text-slate-200 text-xs sm:text-sm">
                         <div class="flex items-center gap-2">
-                            <button onclick="toggleDone(${originalIndex})" title="Marcar como hecho" class="no-print w-4 h-4 rounded border ${job.status === 'Terminados' ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-700 bg-slate-900'} flex items-center justify-center transition-colors">
+                            <button onclick="toggleDone('${job.id}')" title="Marcar como hecho" class="no-print w-4 h-4 rounded border ${job.status === 'Terminados' ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-700 bg-slate-900'} flex items-center justify-center transition-colors">
                                 ${job.status === 'Terminados' ? '✓' : ''}
                             </button>
                             <span>${escapeHtml(job.address)}</span>
@@ -241,10 +261,10 @@
                     <td class="py-3.5 px-5">${expiryHtml}</td>
                     <td class="py-3.5 px-5 text-slate-400 text-xs">${job.notes ? escapeHtml(job.notes) : '<span class="text-slate-600 italic">Sin notas</span>'}</td>
                     <td class="py-3.5 px-5 text-right space-x-1 no-print">
-                        <button onclick="editJob(${originalIndex})" class="text-slate-500 hover:text-indigo-400 transition-colors p-1.5 rounded-lg hover:bg-indigo-500/10" title="Editar">
+                        <button onclick="editJob('${job.id}')" class="text-slate-500 hover:text-indigo-400 transition-colors p-1.5 rounded-lg hover:bg-indigo-500/10" title="Editar">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                         </button>
-                        <button onclick="deleteJob(${originalIndex})" class="text-slate-500 hover:text-rose-400 transition-colors p-1.5 rounded-lg hover:bg-rose-500/10" title="Eliminar">
+                        <button onclick="deleteJob('${job.id}')" class="text-slate-500 hover:text-rose-400 transition-colors p-1.5 rounded-lg hover:bg-rose-500/10" title="Eliminar">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                         </button>
                     </td>
@@ -255,7 +275,6 @@
 
         function downloadPDF() {
             const element = document.getElementById('pdf-content-area');
-            // Ocultar temporalmente los botones de acción para que el PDF salga limpio
             const noPrintElements = document.querySelectorAll('.no-print');
             noPrintElements.forEach(el => el.style.display = 'none');
 
@@ -268,26 +287,33 @@
             };
 
             html2pdf().from(element).set(options).save().then(() => {
-                // Volver a mostrar los elementos ocultos
                 noPrintElements.forEach(el => el.style.display = '');
             });
         }
 
-        function toggleDone(index) {
-            const jobs = getJobs();
-            if (jobs[index]) {
-                jobs[index].status = jobs[index].status === 'Terminados' ? 'Sin terminar' : 'Terminados';
-                saveJobs(jobs);
+        async function toggleDone(id) {
+            const job = cachedJobs.find(j => j.id === id);
+            if (!job) return;
+
+            const newStatus = job.status === 'Terminados' ? 'Sin terminar' : 'Terminados';
+
+            const { error } = await supabase
+                .from('ocas_inspecciones')
+                .update({ estado: newStatus })
+                .eq('id', id);
+
+            if (error) {
+                console.error('Error al actualizar estado:', error);
+            } else {
                 renderJobs();
             }
         }
 
-        function editJob(index) {
-            const jobs = getJobs();
-            const job = jobs[index];
+        function editJob(id) {
+            const job = cachedJobs.find(j => j.id === id);
             if (!job) return;
 
-            document.getElementById('edit-index').value = index;
+            document.getElementById('edit-id').value = job.id;
             document.getElementById('address-input').value = job.address;
             document.getElementById('status-input').value = job.status;
             document.getElementById('expiry-input').value = job.expiryDate || '';
@@ -295,7 +321,7 @@
 
             document.getElementById('form-title').innerHTML = `
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                Editando Registro #${index + 1}
+                Editando Registro
             `;
             document.getElementById('cancel-edit-btn').classList.remove('hidden');
             document.getElementById('submit-btn').innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>`;
@@ -304,7 +330,7 @@
         }
 
         function resetForm() {
-            document.getElementById('edit-index').value = '-1';
+            document.getElementById('edit-id').value = '';
             document.getElementById('job-form').reset();
             document.getElementById('status-input').value = 'Sin terminar';
             document.getElementById('form-title').innerHTML = `
@@ -316,14 +342,13 @@
         }
 
         function shareWhatsApp() {
-            const jobs = getJobs();
-            if (jobs.length === 0) {
+            if (cachedJobs.length === 0) {
                 alert('No hay registros para enviar por WhatsApp.');
                 return;
             }
 
             let text = "📋 *CONTROL DE DEFECTOS OCA* 📋\n\n";
-            jobs.forEach((job, index) => {
+            cachedJobs.forEach((job, index) => {
                 let expiry = job.expiryDate ? job.expiryDate.split('-').reverse().join('/') : 'Sin fecha';
                 text += `*${index + 1}. ${job.address}*\n`;
                 text += `• Estado: ${job.status}\n`;
@@ -337,12 +362,12 @@
         }
 
         function exportData() {
-            const data = localStorage.getItem(STORAGE_KEY);
-            if (!data || JSON.parse(data).length === 0) {
+            if (cachedJobs.length === 0) {
                 alert('No hay datos para exportar.');
                 return;
             }
-            const blob = new Blob([data], { type: 'application/json' });
+            const dataStr = JSON.stringify(cachedJobs, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -351,17 +376,24 @@
             URL.revokeObjectURL(url);
         }
 
-        function importData(event) {
+        async function importData(event) {
             const file = event.target.files[0];
             if (!file) return;
 
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 try {
                     const importedData = JSON.parse(e.target.result);
                     if (Array.isArray(importedData)) {
-                        if (confirm(`¿Estás seguro de importar estos datos? Se sobrescribirán los registros actuales.`)) {
-                            saveJobs(importedData);
+                        if (confirm(`¿Estás seguro de importar estos datos a Supabase? Se añadirán a la base de datos.`)) {
+                            for (const item of importedData) {
+                                await supabase.from('ocas_inspecciones').insert([{
+                                    lugar_instalacion: item.address || item.lugar_instalacion,
+                                    estado: item.status || item.estado || 'Sin terminar',
+                                    fecha_inspeccion: item.expiryDate || item.fecha_inspeccion || null,
+                                    observaciones: item.notes || item.observaciones || ''
+                                }]);
+                            }
                             renderJobs();
                             alert('¡Datos importados con éxito!');
                         }
@@ -376,30 +408,36 @@
             event.target.value = '';
         }
 
-        document.getElementById('job-form').addEventListener('submit', function(e) {
+        document.getElementById('job-form').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const editIndex = parseInt(document.getElementById('edit-index').value);
+            const editId = document.getElementById('edit-id').value;
             const addressInput = document.getElementById('address-input');
             const statusInput = document.getElementById('status-input');
             const expiryInput = document.getElementById('expiry-input');
             const notesInput = document.getElementById('notes-input');
 
             const jobData = {
-                address: addressInput.value.trim(),
-                status: statusInput.value,
-                expiryDate: expiryInput.value,
-                notes: notesInput.value.trim()
+                lugar_instalacion: addressInput.value.trim(),
+                estado: statusInput.value,
+                fecha_inspeccion: expiryInput.value || null,
+                observaciones: notesInput.value.trim()
             };
 
-            const jobs = getJobs();
-
-            if (editIndex > -1) {
-                jobs[editIndex] = jobData;
+            if (editId) {
+                const { error } = await supabase
+                    .from('ocas_inspecciones')
+                    .update(jobData)
+                    .eq('id', editId);
+                
+                if (error) console.error('Error al actualizar:', error);
             } else {
-                jobs.unshift(jobData);
+                const { error } = await supabase
+                    .from('ocas_inspecciones')
+                    .insert([jobData]);
+                
+                if (error) console.error('Error al insertar:', error);
             }
 
-            saveJobs(jobs);
             resetForm();
             renderJobs();
         });
@@ -408,36 +446,36 @@
             renderJobs();
         });
 
-        function deleteJob(index) {
-            const row = document.getElementById(`job-row-${index}`);
+        async function deleteJob(id) {
+            const row = document.getElementById(`job-row-${id}`);
             if (row) {
                 row.classList.add('animate-fade-out');
-                setTimeout(() => {
-                    const jobs = getJobs();
-                    jobs.splice(index, 1);
-                    saveJobs(jobs);
+                setTimeout(async () => {
+                    await supabase.from('ocas_inspecciones').delete().eq('id', id);
                     renderJobs();
                 }, 200);
             } else {
-                const jobs = getJobs();
-                jobs.splice(index, 1);
-                saveJobs(jobs);
+                await supabase.from('ocas_inspecciones').delete().eq('id', id);
                 renderJobs();
             }
         }
 
-        function clearAllJobs() {
-            if (confirm('¿Estás seguro de que deseas eliminar todos los registros de defectos OCA?')) {
-                localStorage.removeItem(STORAGE_KEY);
+        async function clearAllJobs() {
+            if (confirm('¿Estás seguro de que deseas eliminar TODOS los registros de defectos OCA de Supabase?')) {
+                // Borramos todos haciendo match con una condición que siempre sea verdadera
+                const { error } = await supabase.from('ocas_inspecciones').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+                if (error) console.error('Error al borrar todo:', error);
                 renderJobs();
             }
         }
 
         function escapeHtml(text) {
+            if (!text) return '';
             const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-            return text.replace(/[&<>"']/g, m => map[m]);
+            return text.toString().replace(/[&<>"']/g, m => map[m]);
         }
 
+        // Carga inicial al abrir la página
         renderJobs();
     </script>
 </body>
