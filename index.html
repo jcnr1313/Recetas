@@ -163,8 +163,8 @@
 
     <script>
         // Configuración de Supabase
-        const SUPABASE_URL = 'https://tu-proyecto.supabase.co';
-        const SUPABASE_ANON_KEY = 'tu-clave-anonima-aqui';
+        const SUPABASE_URL = 'https://nefnltsxblfpfrifdsgy.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_ICUgIbsQd736F6tkK1FxCw_DiyJiIFk';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let cachedJobs = [];
@@ -188,7 +188,6 @@
                 return [];
             }
             
-            // Mapeamos los campos de la BD al formato que usa la app
             cachedJobs = data.map(item => ({
                 id: item.id,
                 address: item.lugar_instalacion,
@@ -462,7 +461,6 @@
 
         async function clearAllJobs() {
             if (confirm('¿Estás seguro de que deseas eliminar TODOS los registros de defectos OCA de Supabase?')) {
-                // Borramos todos haciendo match con una condición que siempre sea verdadera
                 const { error } = await supabase.from('ocas_inspecciones').delete().neq('id', '00000000-0000-0000-0000-000000000000');
                 if (error) console.error('Error al borrar todo:', error);
                 renderJobs();
@@ -475,7 +473,6 @@
             return text.toString().replace(/[&<>"']/g, m => map[m]);
         }
 
-        // Carga inicial al abrir la página
         renderJobs();
     </script>
 </body>
