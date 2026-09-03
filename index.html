@@ -188,7 +188,7 @@
                 return [];
             }
             
-            cachedJobs = data.map(item => ({
+            cachedJobs = (data || []).map(item => ({
                 id: item.id,
                 address: item.lugar_instalacion,
                 status: item.estado || 'Sin terminar',
@@ -245,7 +245,7 @@
                 tr.innerHTML = `
                     <td class="py-3.5 px-5 font-medium text-slate-200 text-xs sm:text-sm">
                         <div class="flex items-center gap-2">
-                            <button onclick="toggleDone('${job.id}')" title="Marcar como hecho" class="no-print w-4 h-4 rounded border ${job.status === 'Terminados' ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-700 bg-slate-900'} flex items-center justify-center transition-colors">
+                            <button type="button" onclick="toggleDone('${job.id}')" title="Marcar como hecho" class="no-print w-4 h-4 rounded border ${job.status === 'Terminados' ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-700 bg-slate-900'} flex items-center justify-center transition-colors">
                                 ${job.status === 'Terminados' ? '✓' : ''}
                             </button>
                             <span>${escapeHtml(job.address)}</span>
@@ -260,10 +260,10 @@
                     <td class="py-3.5 px-5">${expiryHtml}</td>
                     <td class="py-3.5 px-5 text-slate-400 text-xs">${job.notes ? escapeHtml(job.notes) : '<span class="text-slate-600 italic">Sin notas</span>'}</td>
                     <td class="py-3.5 px-5 text-right space-x-1 no-print">
-                        <button onclick="editJob('${job.id}')" class="text-slate-500 hover:text-indigo-400 transition-colors p-1.5 rounded-lg hover:bg-indigo-500/10" title="Editar">
+                        <button type="button" onclick="editJob('${job.id}')" class="text-slate-500 hover:text-indigo-400 transition-colors p-1.5 rounded-lg hover:bg-indigo-500/10" title="Editar">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                         </button>
-                        <button onclick="deleteJob('${job.id}')" class="text-slate-500 hover:text-rose-400 transition-colors p-1.5 rounded-lg hover:bg-rose-500/10" title="Eliminar">
+                        <button type="button" onclick="deleteJob('${job.id}')" class="text-slate-500 hover:text-rose-400 transition-colors p-1.5 rounded-lg hover:bg-rose-500/10" title="Eliminar">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                         </button>
                     </td>
@@ -304,7 +304,7 @@
             if (error) {
                 console.error('Error al actualizar estado:', error);
             } else {
-                renderJobs();
+                await renderJobs();
             }
         }
 
@@ -393,7 +393,7 @@
                                     observaciones: item.notes || item.observaciones || ''
                                 }]);
                             }
-                            renderJobs();
+                            await renderJobs();
                             alert('¡Datos importados con éxito!');
                         }
                     } else {
@@ -438,7 +438,7 @@
             }
 
             resetForm();
-            renderJobs();
+            await renderJobs();
         });
 
         document.getElementById('search-input').addEventListener('input', function() {
@@ -451,11 +451,11 @@
                 row.classList.add('animate-fade-out');
                 setTimeout(async () => {
                     await supabase.from('ocas_inspecciones').delete().eq('id', id);
-                    renderJobs();
+                    await renderJobs();
                 }, 200);
             } else {
                 await supabase.from('ocas_inspecciones').delete().eq('id', id);
-                renderJobs();
+                await renderJobs();
             }
         }
 
@@ -463,7 +463,7 @@
             if (confirm('¿Estás seguro de que deseas eliminar TODOS los registros de defectos OCA de Supabase?')) {
                 const { error } = await supabase.from('ocas_inspecciones').delete().neq('id', '00000000-0000-0000-0000-000000000000');
                 if (error) console.error('Error al borrar todo:', error);
-                renderJobs();
+                await renderJobs();
             }
         }
 
@@ -473,7 +473,10 @@
             return text.toString().replace(/[&<>"']/g, m => map[m]);
         }
 
-        renderJobs();
+        // Inicializar datos al cargar la página de forma segura
+        document.addEventListener('DOMContentLoaded', () => {
+            renderJobs();
+        });
     </script>
 </body>
 </html>
