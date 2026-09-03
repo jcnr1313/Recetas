@@ -63,7 +63,7 @@
                     <div>
                         <div class="flex items-center gap-2">
                             <h1 class="text-lg sm:text-xl font-bold tracking-tight text-white">Control Defectos OCA</h1>
-                            <span class="text-[10px] sm:text-xs bg-purple-950/80 text-purple-300 border border-purple-700/50 px-2 py-0.5 rounded-full font-medium">Elevia Pro</span>
+                            <button onclick="abrirAyuda()" class="w-6 h-6 rounded-full bg-purple-950/80 text-purple-300 border border-purple-700/50 flex items-center justify-center text-xs font-bold hover:bg-purple-900 transition" title="Información y Ayuda">i</button>
                         </div>
                         <p id="contadorRegistros" class="text-xs text-slate-400 mt-0.5">Sincronizando registros...</p>
                     </div>
@@ -90,10 +90,12 @@
 
         <!-- Formulario de Registro -->
         <div class="glass-card p-5 sm:p-6 rounded-2xl shadow-2xl">
-            <h2 class="text-xs sm:text-sm font-semibold uppercase tracking-wider text-purple-400 mb-4 flex items-center gap-2">
-                <span>➕</span> Registrar Nuevo Defecto / Dirección
+            <h2 id="formTitulo" class="text-xs sm:text-sm font-semibold uppercase tracking-wider text-purple-400 mb-4 flex items-center justify-between">
+                <span class="flex items-center gap-2"><span>➕</span> <span id="formTituloTexto">Registrar Nuevo Defecto / Dirección</span></span>
+                <button type="button" id="btnCancelarEdicion" onclick="cancelarEdicion()" class="hidden text-xs text-rose-400 hover:underline">Cancelar edición</button>
             </h2>
             <form id="ocaForm" class="space-y-4">
+                <input type="hidden" id="editId" value="">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-medium text-slate-400 mb-1.5">Dirección de la Instalación</label>
@@ -138,7 +140,7 @@
                     </div>
                 </div>
 
-                <button type="submit" 
+                <button type="submit" id="btnSubmit"
                     class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold py-3 rounded-xl transition-all shadow-lg shadow-purple-900/30 flex items-center justify-center gap-2 text-sm sm:text-base active:scale-[0.99]">
                     <span>+ Añadir Registro al Sistema</span>
                 </button>
@@ -182,7 +184,7 @@
                             <th class="py-3 px-3">Estado / Responsable</th>
                             <th class="py-3 px-3">Caducidad / Plazo</th>
                             <th class="py-3 px-3">Notas</th>
-                            <th class="py-3 px-3 text-center">Acción</th>
+                            <th class="py-3 px-3 text-center">Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="tablaOcas" class="divide-y divide-slate-800/50 text-sm">
@@ -199,65 +201,107 @@
 
         <!-- Footer -->
         <footer class="text-center text-xs text-slate-500 pt-2 pb-6 space-y-1">
-            <p>Control de Defectos OCA • <span id="syncStatus" class="text-emerald-400 font-medium">Sincronizado con Supabase en tiempo real ⚡</span></p>
+            <p>Control de Defectos OCA • <span id="syncStatus" class="text-emerald-400 font-medium">Sincronizado correctamente ⚡</span></p>
             <p class="text-[11px] text-slate-600">Elevia Pro • Todos los derechos reservados</p>
         </footer>
     </div>
 
+    <!-- Modal de Ayuda / Información (i) -->
+    <div id="modalAyuda" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="glass-card max-w-md w-full p-6 rounded-2xl shadow-2xl space-y-4 border border-purple-500/30">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="text-sm font-bold uppercase tracking-wider text-purple-400 flex items-center gap-2">
+                    <span>ℹ️</span> Manual de Uso - Elevia Pro
+                </h3>
+                <button onclick="cerrarAyuda()" class="text-slate-400 hover:text-white text-lg font-bold px-2">&times;</button>
+            </div>
+            <div class="text-xs text-slate-300 space-y-2.5 leading-relaxed">
+                <p><strong>Control Defectos OCA</strong> está diseñado para gestionar los plazos y correcciones de inspecciones en instalaciones de ascensores.</p>
+                <ul class="list-disc pl-4 space-y-1 text-slate-400">
+                    <li><strong class="text-slate-200">Añadir / Editar:</strong> Rellena la dirección, estado, fecha de caducidad y notas. Si te equivocas en un registro, pulsa el botón de editar (✏️) para modificarlo al momento.</li>
+                    <li><strong class="text-slate-200">Colores de Plazo:</strong>
+                        <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 ml-1"></span> <strong>Verde:</strong> Vigente (>30 días).
+                        <span class="inline-block w-2 h-2 rounded-full bg-amber-400 ml-1"></span> <strong>Ámbar:</strong> Próximo a vencer (≤30 días).
+                        <span class="inline-block w-2 h-2 rounded-full bg-rose-400 ml-1"></span> <strong>Rojo:</strong> Plazo caducado.
+                    </li>
+                    <li><strong class="text-slate-200">Exportar e Imprimir:</strong> Genera informes en PDF o compártelos directamente por WhatsApp con un solo toque.</li>
+                </ul>
+            </div>
+            <button onclick="cerrarAyuda()" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-semibold py-2.5 rounded-xl text-xs transition">
+                Entendido
+            </button>
+        </div>
+    </div>
+
     <!-- Script de Conexión y Lógica Avanzada -->
     <script>
-        // CONFIGURACIÓN DE SUPABASE (Sustituye por tus credenciales reales)
+        // CONFIGURACIÓN DE SUPABASE (Modo híbrido seguro con LocalStorage por defecto)
         const SUPABASE_URL = 'https://TU-PROYECTO.supabase.co';
         const SUPABASE_ANON_KEY = 'TU-ANON-KEY';
         
         let supabaseClient = null;
         let registrosGlobales = [];
         let filtroActual = 'todos';
+        let modoRemoto = false;
 
-        // Auto-fijar fecha por defecto a 1 año a partir de hoy al cargar
         window.addEventListener('DOMContentLoaded', () => {
             sumarMeses(12);
+            intentarConexionSupabase();
         });
 
-        try {
-            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            initSupabase();
-        } catch (e) {
-            console.warn("Supabase no configurado, operando en modo local.", e);
-            document.getElementById('syncStatus').innerText = "Modo local (Configura Supabase)";
+        function intentarConexionSupabase() {
+            // Validar si las credenciales son las de plantilla por defecto
+            if (SUPABASE_URL.includes('TU-PROYECTO') || SUPABASE_ANON_KEY.includes('TU-ANON-KEY')) {
+                activarModoLocal("Modo local activo (Funcionamiento autónomo)");
+                return;
+            }
+
+            try {
+                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                initSupabase();
+            } catch (e) {
+                activarModoLocal("Modo local (Error de conexión con Supabase)");
+            }
+        }
+
+        function activarModoLocal(mensaje) {
+            modoRemoto = false;
+            document.getElementById('syncStatus').innerText = mensaje;
             document.getElementById('syncStatus').className = "text-amber-400 font-medium";
             cargarLocalFallback();
         }
 
         async function initSupabase() {
-            await cargarRegistrosSupabase();
-            
-            // Suscripción Realtime bidireccional instantánea
-            supabaseClient
-                .channel('public:oca_registros')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'oca_registros' }, payload => {
-                    console.log('Cambio detectado en tiempo real:', payload);
-                    cargarRegistrosSupabase();
-                })
-                .subscribe((status) => {
-                    if (status === 'SUBSCRIBED') {
-                        document.getElementById('syncStatus').innerText = "Sincronizado con Supabase en tiempo real ⚡";
-                    }
-                });
+            try {
+                const { error } = await supabaseClient.from('oca_registros').select('id').limit(1);
+                if (error) throw error;
+                modoRemoto = true;
+                document.getElementById('syncStatus').innerText = "Sincronizado con Supabase en tiempo real ⚡";
+                document.getElementById('syncStatus').className = "text-emerald-400 font-medium";
+                await cargarRegistrosSupabase();
+
+                supabaseClient
+                    .channel('public:oca_registros')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'oca_registros' }, () => {
+                        cargarRegistrosSupabase();
+                    })
+                    .subscribe();
+            } catch (err) {
+                activarModoLocal("Modo local (Supabase no accesible)");
+            }
         }
 
         async function cargarRegistrosSupabase() {
+            if (!modoRemoto) return;
             const { data, error } = await supabaseClient
                 .from('oca_registros')
                 .select('*')
                 .order('created_at', { ascending: false });
 
-            if (error) {
-                console.error('Error cargando de Supabase:', error);
-                return;
+            if (!error) {
+                registrosGlobales = data || [];
+                aplicarFiltrosYRenderizar();
             }
-            registrosGlobales = data || [];
-            aplicarFiltrosYRenderizar();
         }
 
         function sumarMeses(meses) {
@@ -266,33 +310,68 @@
             document.getElementById('caducidad').valueAsDate = fecha;
         }
 
-        // Manejo del Formulario
+        // Manejo del Formulario (Crear o Editar)
         document.getElementById('ocaForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
-            const nuevoItem = {
+            const editId = document.getElementById('editId').value;
+            const itemData = {
                 direccion: document.getElementById('direccion').value,
                 estado: document.getElementById('estado').value,
                 caducidad: document.getElementById('caducidad').value,
                 notas: document.getElementById('notas').value
             };
 
-            if (supabaseClient) {
-                const { error } = await supabaseClient.from('oca_registros').insert([nuevoItem]);
-                if (error) {
-                    alert('Error al guardar en Supabase: ' + error.message);
-                    return;
+            if (modoRemoto) {
+                if (editId) {
+                    const { error } = await supabaseClient.from('oca_registros').update(itemData).eq('id', editId);
+                    if (error) { alert('Error al actualizar: ' + error.message); return; }
+                } else {
+                    const { error } = await supabaseClient.from('oca_registros').insert([itemData]);
+                    if (error) { alert('Error al guardar: ' + error.message); return; }
                 }
+                await cargarRegistrosSupabase();
             } else {
-                nuevoItem.id = Date.now();
-                registrosGlobales.unshift(nuevoItem);
+                if (editId) {
+                    registrosGlobales = registrosGlobales.map(r => r.id == editId ? { ...r, ...itemData } : r);
+                } else {
+                    itemData.id = Date.now();
+                    registrosGlobales.unshift(itemData);
+                }
                 localStorage.setItem('oca_fallback', JSON.stringify(registrosGlobales));
                 aplicarFiltrosYRenderizar();
             }
 
-            this.reset();
-            sumarMeses(12); // restablecer valor por defecto
+            cancelarEdicion();
         });
+
+        function prepararEdicion(id) {
+            const registro = registrosGlobales.find(r => r.id == id);
+            if (!registro) return;
+
+            document.getElementById('editId').value = registro.id;
+            document.getElementById('direccion').value = registro.direccion;
+            document.getElementById('estado').value = registro.estado;
+            document.getElementById('caducidad').value = registro.caducidad;
+            document.getElementById('notas').value = registro.notas || '';
+
+            document.getElementById('formTituloTexto').innerText = 'Modificar Defecto / Dirección';
+            document.getElementById('btnCancelarEdicion').classList.remove('hidden');
+            document.getElementById('btnSubmit').innerHTML = '<span>💾 Guardar Cambios</span>';
+            document.getElementById('btnSubmit').className = "w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-semibold py-3 rounded-xl transition-all shadow-lg shadow-amber-900/30 flex items-center justify-center gap-2 text-sm sm:text-base active:scale-[0.99]";
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function cancelarEdicion() {
+            document.getElementById('ocaForm').reset();
+            document.getElementById('editId').value = '';
+            document.getElementById('formTituloTexto').innerText = 'Registrar Nuevo Defecto / Dirección';
+            document.getElementById('btnCancelarEdicion').classList.add('hidden');
+            document.getElementById('btnSubmit').innerHTML = '<span>+ Añadir Registro al Sistema</span>';
+            document.getElementById('btnSubmit').className = "w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold py-3 rounded-xl transition-all shadow-lg shadow-purple-900/30 flex items-center justify-center gap-2 text-sm sm:text-base active:scale-[0.99]";
+            sumarMeses(12);
+        }
 
         function filtrarEstado(tipo) {
             filtroActual = tipo;
@@ -316,7 +395,6 @@
                                       reg.estado.toLowerCase().includes(textoBusqueda);
                 
                 if (!coincideTexto) return false;
-
                 if (filtroActual === 'todos') return true;
 
                 const { tipo } = calcularEstadoInfo(reg.caducidad);
@@ -364,7 +442,6 @@
             datos.forEach(reg => {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-800/40 transition-colors";
-
                 const estadoInfo = calcularEstadoInfo(reg.caducidad);
 
                 tr.innerHTML = `
@@ -385,9 +462,14 @@
                         <div class="line-clamp-2">${reg.notas || '-'}</div>
                     </td>
                     <td class="py-3.5 px-3 text-center">
-                        <button onclick="eliminarRegistro('${reg.id}')" class="text-slate-500 hover:text-rose-400 transition-colors p-1.5 rounded-lg hover:bg-rose-950/30" title="Eliminar registro">
-                            🗑️
-                        </button>
+                        <div class="flex items-center justify-center gap-1">
+                            <button onclick="prepararEdicion('${reg.id}')" class="text-slate-400 hover:text-amber-400 transition-colors p-1.5 rounded-lg hover:bg-amber-950/30" title="Modificar registro">
+                                ✏️
+                            </button>
+                            <button onclick="eliminarRegistro('${reg.id}')" class="text-slate-400 hover:text-rose-400 transition-colors p-1.5 rounded-lg hover:bg-rose-950/30" title="Eliminar registro">
+                                🗑️
+                            </button>
+                        </div>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -396,9 +478,10 @@
 
         async function eliminarRegistro(id) {
             if (confirm('¿Estás seguro de eliminar este registro?')) {
-                if (supabaseClient) {
+                if (modoRemoto) {
                     const { error } = await supabaseClient.from('oca_registros').delete().eq('id', id);
                     if (error) alert('Error al eliminar: ' + error.message);
+                    else await cargarRegistrosSupabase();
                 } else {
                     registrosGlobales = registrosGlobales.filter(r => r.id != id);
                     localStorage.setItem('oca_fallback', JSON.stringify(registrosGlobales));
@@ -409,9 +492,10 @@
 
         async function borrarTodo() {
             if (confirm('¿Estás seguro de vaciar todos los registros del sistema?')) {
-                if (supabaseClient) {
+                if (modoRemoto) {
                     const { error } = await supabaseClient.from('oca_registros').delete().neq('id', 0);
                     if (error) alert('Error al vaciar: ' + error.message);
+                    else await cargarRegistrosSupabase();
                 } else {
                     registrosGlobales = [];
                     localStorage.removeItem('oca_fallback');
@@ -423,6 +507,14 @@
         document.getElementById('buscador').addEventListener('input', () => {
             aplicarFiltrosYRenderizar();
         });
+
+        function abrirAyuda() {
+            document.getElementById('modalAyuda').classList.remove('hidden');
+        }
+
+        function cerrarAyuda() {
+            document.getElementById('modalAyuda').classList.add('hidden');
+        }
 
         function exportarJSON() {
             if (registrosGlobales.length === 0) {
@@ -448,9 +540,18 @@
                     if (Array.isArray(imported)) {
                         for (let item of imported) {
                             delete item.id;
-                            if (supabaseClient) {
+                            if (modoRemoto) {
                                 await supabaseClient.from('oca_registros').insert([item]);
+                            } else {
+                                item.id = Date.now() + Math.random();
+                                registrosGlobales.unshift(item);
                             }
+                        }
+                        if (!modoRemoto) {
+                            localStorage.setItem('oca_fallback', JSON.stringify(registrosGlobales));
+                            aplicarFiltrosYRenderizar();
+                        } else {
+                            await cargarRegistrosSupabase();
                         }
                         alert('¡Importación completada con éxito!');
                     }
