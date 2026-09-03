@@ -1,591 +1,746 @@
 <!DOCTYPE html>
-<html lang="es" class="dark">
+<html lang="es" data-theme="stark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control de Defectos OCA Pro</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {}
-            }
-        }
-    </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <title>Gestión de Guardias • HUD Command Center V6</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SDK de Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style> 
-        body { font-family: 'Inter', sans-serif; } 
-        * { scrollbar-width: thin; scrollbar-color: rgba(71, 85, 105, 0.5) transparent; }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-8px); }
-            to { opacity: 1; transform: translateY(0); }
+    <style>
+        /* Temas HUD / Sci-Fi */
+        :root {
+            --bg-app: #020617; --bg-card: rgba(15, 23, 42, 0.85); --text-main: #f8fafc; --text-muted: #94a3b8;
+            --border: rgba(51, 65, 85, 0.8); --accent: #3b82f6; --accent-glow: rgba(59, 130, 246, 0.4);
+            --radius-lg: 20px; --radius-md: 12px;
+            --shadow: 0 20px 25px -5px rgba(0,0,0,0.6), 0 8px 10px -6px rgba(0,0,0,0.6);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+        [data-theme="cyberpunk"] {
+            --bg-app: #090014; --bg-card: rgba(24, 0, 46, 0.85); --text-main: #fff5fd; --text-muted: #d946ef;
+            --border: rgba(217, 70, 239, 0.4); --accent: #ec4899; --accent-glow: rgba(236, 72, 153, 0.6);
+        }
+        [data-theme="matrix"] {
+            --bg-app: #020d04; --bg-card: rgba(3, 26, 8, 0.85); --text-main: #f0fdf4; --text-muted: #4ade80;
+            --border: rgba(74, 222, 128, 0.4); --accent: #22c55e; --accent-glow: rgba(34, 197, 94, 0.6);
+        }
+        [data-theme="stark"] {
+            --bg-app: #030712; --bg-card: rgba(17, 24, 39, 0.85); --text-main: #f3f4f6; --text-muted: #9ca3af;
+            --border: rgba(55, 65, 81, 0.8); --accent: #06b6d4; --accent-glow: rgba(6, 182, 212, 0.5);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-app); color: var(--text-main); padding: 20px; min-height: 100vh; position: relative; overflow-x: hidden; }
+        
+        body::before { content: ''; position: fixed; inset: 0; background-image: radial-gradient(circle at 50% 50%, var(--accent-glow) 0%, transparent 60%); opacity: 0.15; pointer-events: none; z-index: -1; }
+
+        .font-mono-custom { font-family: 'JetBrains Mono', monospace; }
+        .main-container { max-width: 1400px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+        
+        header { background: var(--bg-card); backdrop-filter: blur(16px); padding: 18px 24px; border-radius: var(--radius-lg); box-shadow: var(--shadow); display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); flex-wrap: wrap; gap: 15px; }
+        header h1 { font-size: 1.3rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 12px; }
+        .header-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        
+        .btn { padding: 9px 14px; border-radius: var(--radius-md); font-weight: 600; cursor: pointer; border: none; transition: var(--transition); font-size: 0.82rem; display: flex; align-items: center; gap: 8px; text-decoration: none;}
+        .btn-primary { background: var(--accent); color: white; box-shadow: 0 0 15px var(--accent-glow); }
+        .btn-primary:hover { filter: brightness(1.2); transform: translateY(-1px); }
+        .btn-danger { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+        .btn-danger:hover { transform: translateY(-1px); }
+        .btn-secondary { background: rgba(30, 41, 59, 0.6); border: 1px solid var(--border); color: var(--text-main); backdrop-filter: blur(8px); }
+        .btn-secondary:hover { background: rgba(51, 65, 85, 0.8); border-color: var(--accent); }
+        
+        .month-nav { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 1rem; }
+
+        /* Widget de Estado de Red HUD */
+        .network-status-badge { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; }
+        .net-dot { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 8px currentColor; transition: background 0.3s; }
+        .net-dot.online { background: #22c55e; color: #22c55e; animation: pulse 2s infinite; }
+        .net-dot.sync { background: #f59e0b; color: #f59e0b; }
+        .net-dot.offline { background: #ef4444; color: #ef4444; }
+
+        /* Banner de Guardia Activa HUD */
+        .active-guard-banner { background: var(--bg-card); backdrop-filter: blur(16px); border: 1px solid var(--accent); border-radius: var(--radius-lg); padding: 18px 22px; box-shadow: 0 0 25px var(--accent-glow); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; position: relative; overflow: hidden; transition: opacity 0.3s; }
+        .active-guard-banner::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+        .active-info { display: flex; align-items: center; gap: 15px; }
+        .active-avatar { width: 46px; height: 46px; border-radius: 12px; background: var(--accent-glow); border: 1px solid var(--accent); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: var(--accent); }
+        
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 400px; gap: 20px; align-items: start; }
+        @media (max-width: 1024px) { .dashboard-grid { grid-template-columns: 1fr; } }
+        
+        .card { background: var(--bg-card); backdrop-filter: blur(16px); border-radius: var(--radius-lg); padding: 20px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+        .calendar-card { overflow-x: auto; }
+        .calendar-legend { display: flex; gap: 12px; font-size: 0.75rem; font-weight: 600; align-items: center; flex-wrap: wrap; }
+        .legend-item { display: flex; align-items: center; gap: 5px; }
+        
+        /* Calendario adaptativo para móviles y PC */
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(85px, 1fr)); gap: 3px; background: var(--border); border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border); }
+        .cal-header { text-align: center; font-weight: 700; font-size: 0.7rem; color: var(--text-muted); padding: 10px 4px; background: var(--bg-app); text-transform: uppercase; letter-spacing: 0.05em; }
+        .cal-cell { background: var(--bg-app); min-height: 100px; padding: 8px; position: relative; display: flex; flex-direction: column; justify-content: space-between; transition: background 0.2s; }
+        .cal-cell:hover { background: rgba(255, 255, 255, 0.03); }
+        .cal-cell.other-month { opacity: 0.3; }
+        .cal-cell.dimmed { opacity: 0.25; filter: grayscale(50%); }
+        
+        .day-header-row { display: flex; justify-content: space-between; align-items: flex-start; z-index: 2; }
+        .day-num { font-weight: 700; font-size: 0.9rem; line-height: 1; font-family: 'JetBrains Mono', monospace; }
+        .cal-cell.is-festivo .day-num { color: #f87171; }
+        .fest-icons { display: flex; gap: 2px; flex-wrap: wrap; justify-content: flex-end; }
+        .fest-icon { font-size: 0.5rem; font-weight: bold; padding: 2px 4px; border-radius: 3px; color: white; letter-spacing: 0.05em; }
+        .fest-nac { background-color: #dc2626; } .fest-aut { background-color: #ea580c; } .fest-loc { background-color: #9333ea; }
+        
+        .guardia-banner { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; padding: 3px 5px; border-radius: 5px; text-align: center; margin: 4px 0; z-index: 2; letter-spacing: 0.03em; backdrop-filter: blur(4px); }
+        .day-rates { display: flex; flex-direction: column; gap: 1px; font-size: 0.6rem; color: var(--text-muted); z-index: 2; margin-top: auto; font-family: 'JetBrains Mono', monospace; }
+        .rate-row { display: flex; justify-content: space-between; }
+        .rate-val { font-weight: 600; }
+        .cal-cell.is-festivo .rate-row.lab { text-decoration: line-through; opacity: 0.4; }
+        .cal-cell.is-festivo .rate-row.fes { color: #f87171; font-weight: bold; }
+        
+        .sidebar { display: flex; flex-direction: column; gap: 18px; }
+        .sidebar-card h3 { font-size: 1rem; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; color: var(--text-main); border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+        .sidebar-card h3 .title-left { display: flex; align-items: center; gap: 8px; }
+        
+        /* Tooltip de Información */
+        .info-tooltip-container { position: relative; display: inline-flex; align-items: center; cursor: pointer; color: var(--text-muted); transition: color 0.2s; }
+        .info-tooltip-container:hover { color: var(--accent); }
+        .info-tooltip { position: absolute; bottom: 125%; left: 50%; transform: translateX(-50%); background: #0f172a; border: 1px solid var(--accent); color: #f8fafc; padding: 8px 12px; border-radius: 8px; font-size: 0.72rem; font-weight: normal; width: 200px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.5); opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s; z-index: 50; }
+        .info-tooltip-container:hover .info-tooltip { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(-2px); }
+
+        .weekly-summary-list { display: flex; flex-direction: column; gap: 8px; max-height: 340px; overflow-y: auto; padding-right: 4px; }
+        .weekly-item { border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; background: rgba(0,0,0,0.2); }
+        .weekly-header { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-muted); font-weight: 500; font-family: 'JetBrains Mono', monospace; }
+        .weekly-details { display: flex; justify-content: space-between; align-items: center; }
+        .weekly-tech { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.85rem; }
+        .tech-color-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; box-shadow: 0 0 6px currentColor; }
+        .weekly-pay { font-weight: 700; font-size: 0.95rem; color: #34d399; font-family: 'JetBrains Mono', monospace; }
+
+        .stats-grid { display: flex; flex-direction: column; gap: 8px; }
+        .stat-row { display: flex; flex-direction: column; gap: 3px; background: rgba(0,0,0,0.2); padding: 7px 10px; border-radius: 8px; border: 1px solid var(--border); font-size: 0.78rem; }
+        .stat-bar-bg { width: 100%; height: 5px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; }
+        .stat-bar-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.5s ease; }
+
+        .config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .config-field { display: flex; flex-direction: column; gap: 3px; }
+        .config-field label { font-size: 0.72rem; color: var(--text-muted); font-weight: 500; }
+        .config-input { background: var(--bg-app); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; color: var(--text-main); font-size: 0.82rem; font-family: 'JetBrains Mono', monospace; width: 100%; }
+
+        .technicians-list { display: flex; flex-direction: column; gap: 6px; }
+        .tech-badge-row { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border); font-size: 0.82rem; }
+
+        /* Terminal de Log de Actividad (Solucionado con altura fija y autoscroll) */
+        .audit-log { background: #010409; border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; color: #34d399; height: 110px; max-height: 110px; overflow-y: auto; display: flex; flex-direction: column; gap: 3px; }
+        .audit-log-item { word-break: break-all; flex-shrink: 0; }
+
+        /* Modales */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(2, 6, 23, 0.85); backdrop-filter: blur(8px); z-index: 3000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+        .modal-overlay.show { opacity: 1; pointer-events: auto; }
+        .modal-box { background: var(--bg-card); border: 1px solid var(--accent); border-radius: var(--radius-lg); padding: 25px; width: 100%; max-width: 400px; box-shadow: 0 0 40px var(--accent-glow); text-align: center; }
+        
+        #toast { position: fixed; bottom: 20px; right: 20px; background: var(--bg-card); border: 1px solid var(--accent); color: var(--text-main); padding: 10px 18px; border-radius: var(--radius-md); box-shadow: 0 10px 25px rgba(0,0,0,0.5); font-weight: 600; font-size: 0.82rem; z-index: 4000; transform: translateY(100px); opacity: 0; transition: all 0.3s; backdrop-filter: blur(10px); }
+        #toast.show { transform: translateY(0); opacity: 1; }
+
+        @media print {
+            body { background: white; color: black; padding: 0; }
+            header, .sidebar, .header-actions, .active-guard-banner, #toast, .modal-overlay { display: none !important; }
+            .card { border: none; box-shadow: none; background: white; padding: 0; }
+            .calendar-grid { border: 1px solid #ccc; }
+            .cal-cell { background: white; border: 1px solid #eee; min-height: 80px; }
+            .day-num { color: black; }
+        }
     </style>
 </head>
-<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col justify-between transition-colors duration-200">
+<body>
 
-    <!-- HEADER -->
-    <header class="border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/90 backdrop-blur-md sticky top-0 z-50">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div class="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-start">
-                <div class="flex items-center space-x-3">
-                    <div class="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-violet-600 to-fuchsia-600 flex items-center justify-center shadow-lg shadow-indigo-600/30 ring-1 ring-white/10">
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+    <div class="main-container">
+        <!-- Cabecera -->
+        <header>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <a href="index.html" class="btn btn-secondary" title="Volver al Portal"><i class="fa-solid fa-arrow-left"></i></a>
+                <h1>🛡️ Cuadrante de Guardias <span style="font-size: 0.65rem; padding: 2px 8px; background: var(--accent-glow); border: 1px solid var(--accent); border-radius: 20px; color: var(--accent);" class="font-mono-custom">V6_HUD</span></h1>
+            </div>
+            <div class="header-actions">
+                <!-- Indicador de Red en Tiempo Real -->
+                <div class="network-status-badge" id="net-status-badge" title="Estado de la Sincronización en Directo">
+                    <span class="net-dot online" id="net-dot"></span>
+                    <span id="net-text" class="font-mono-custom">En Línea</span>
+                </div>
+                <!-- Selector de Temas -->
+                <select id="theme-selector" onchange="cambiarTemaHUD(this.value)" class="config-input" style="padding: 7px 10px; font-weight: 600; width: auto;">
+                    <option value="stark">Stark (Azul)</option>
+                    <option value="cyberpunk">Cyberpunk</option>
+                    <option value="matrix">Matrix (Verde)</option>
+                </select>
+                <button class="btn btn-secondary" onclick="window.print()" title="Imprimir / Exportar PDF"><i class="fa-solid fa-print"></i></button>
+                <button class="btn btn-danger" onclick="abrirModalConfirmacion()"><i class="fa-solid fa-wand-magic-sparkles"></i> Nuevo</button>
+                <div class="month-nav">
+                    <button class="btn btn-secondary" onclick="changeMonth(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+                    <span id="current-month-label" style="min-width: 155px; text-align: center;" class="font-mono-custom text-sm"></span>
+                    <button class="btn btn-secondary" onclick="changeMonth(1)"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Banner de Guardia Activa -->
+        <div class="active-guard-banner" id="active-guard-container">
+            <div class="active-info">
+                <div class="active-avatar" id="active-tech-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                <div>
+                    <span class="text-xs font-mono-custom uppercase tracking-widest block mb-0.5" style="color: var(--accent);" id="active-banner-subtitle">Técnico en Servicio Activo</span>
+                    <h2 class="text-base font-bold text-white" id="active-tech-name">Sincronizando...</h2>
+                </div>
+            </div>
+            <div class="text-right">
+                <span class="text-xs text-slate-400 block font-mono-custom" id="active-guard-dates">-- / --</span>
+                <span class="text-xs text-emerald-400 font-semibold font-mono-custom flex items-center gap-1 justify-end mt-0.5"><span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Sincronizado</span>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Calendario Principal -->
+            <div class="card calendar-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <h2 style="font-size: 1.05rem; display: flex; align-items: center; gap: 8px;"><i class="fa-solid fa-calendar-days" style="color: var(--accent);"></i> Calendario Táctico</h2>
+                        <!-- Filtro Rápido por Técnico -->
+                        <select id="filter-tech-select" onchange="render()" class="config-input" style="padding: 4px 8px; width: auto; font-size: 0.75rem;">
+                            <option value="all">Filtro: Todos</option>
+                        </select>
                     </div>
-                    <div>
-                        <h1 class="text-sm font-bold tracking-tight flex items-center gap-2">
-                            Defectos OCA
-                            <span class="text-[10px] bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded-full font-medium">Pro Suite</span>
-                        </h1>
-                        <div class="flex items-center gap-2 mt-0.5">
-                            <span id="counter-badge" class="text-[11px] text-slate-500 dark:text-slate-400">0 registros</span>
-                            <span class="text-slate-300 dark:text-slate-700">•</span>
-                            <div id="connection-status" class="flex items-center gap-1.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
-                                <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                <span id="connection-text">Online</span>
-                            </div>
+                    <div class="calendar-legend">
+                        <div class="legend-item"><span class="fest-icon fest-nac">NAC</span> Nac</div>
+                        <div class="legend-item"><span class="fest-icon fest-aut">AUT</span> Aut</div>
+                        <div class="legend-item"><span class="fest-icon fest-loc">LOC</span> Loc</div>
+                    </div>
+                </div>
+                <div class="calendar-grid" id="calendar-grid-container">
+                    <div class="cal-header">Lun</div><div class="cal-header">Mar</div><div class="cal-header">Mié</div><div class="cal-header">Jue</div><div class="cal-header">Vie</div><div class="cal-header">Sáb</div><div class="cal-header">Dom</div>
+                </div>
+            </div>
+
+            <!-- Panel Lateral de Control -->
+            <aside class="sidebar">
+                <!-- Estadísticas y Reparto Equitativo -->
+                <div class="card sidebar-card">
+                    <h3>
+                        <span class="title-left"><i class="fa-solid fa-chart-pie text-amber-400"></i> Reparto Equitativo</span>
+                        <div class="info-tooltip-container">
+                            <i class="fa-solid fa-circle-info"></i>
+                            <div class="info-tooltip">Porcentaje y total de semanas asignadas a cada técnico para asegurar un balance equitativo anual.</div>
+                        </div>
+                    </h3>
+                    <div class="stats-grid" id="stats-grid-container"></div>
+                </div>
+
+                <!-- Configuración de Tarifas -->
+                <div class="card sidebar-card">
+                    <h3>
+                        <span class="title-left"><i class="fa-solid fa-coins text-yellow-400"></i> Tarifas Operativas</span>
+                        <div class="info-tooltip-container">
+                            <i class="fa-solid fa-circle-info"></i>
+                            <div class="info-tooltip">Coste por día laboral y festivo aplicado automáticamente en el cálculo de cada semana de guardia.</div>
+                        </div>
+                    </h3>
+                    <div class="config-grid">
+                        <div class="config-field">
+                            <label>Laboral (€)</label>
+                            <input type="number" id="rate-lab" value="28" class="config-input" onchange="actualizarTarifas()">
+                        </div>
+                        <div class="config-field">
+                            <label>Festivo (€)</label>
+                            <input type="number" id="rate-fes" value="70" class="config-input" onchange="actualizarTarifas()">
                         </div>
                     </div>
                 </div>
 
-                <!-- Botón Tema móvil -->
-                <button onclick="toggleTheme()" class="sm:hidden p-2 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300">
-                    <svg id="theme-icon-mobile" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                </button>
-            </div>
-            
-            <div class="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap">
-                <button onclick="downloadPDF()" title="Descargar PDF" class="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 transition-all active:scale-95">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                    <span>PDF</span>
-                </button>
-                <button onclick="shareWhatsApp()" title="Enviar por WhatsApp" class="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 transition-all active:scale-95">
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
-                    <span>WhatsApp</span>
-                </button>
-                <button onclick="exportData()" title="Exportar JSON" class="text-xs font-medium px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-indigo-600 dark:text-indigo-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all">
-                    Exportar
-                </button>
-                <label title="Importar JSON" class="text-xs font-medium px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-emerald-600 dark:text-emerald-400 hover:bg-slate-200 dark:hover:bg-slate-800 cursor-pointer transition-all">
-                    Importar
-                    <input type="file" accept=".json" class="hidden" onchange="importData(event)">
-                </label>
-                <!-- Botón Tema escritorio -->
-                <button onclick="toggleTheme()" class="hidden sm:flex p-2 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300" title="Cambiar tema">
-                    <svg id="theme-icon-desktop" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                </button>
-            </div>
-        </div>
-    </header>
-
-    <!-- MAIN CONTENT -->
-    <main class="max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 flex-grow">
-        
-        <!-- FORMULARIO -->
-        <section class="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xl mb-6 relative overflow-hidden transition-colors">
-            <div class="flex justify-between items-center mb-3">
-                <h2 id="form-title" class="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    Registrar Nuevo Defecto / Dirección
-                </h2>
-                <button type="button" id="cancel-edit-btn" onclick="resetForm()" class="hidden text-xs text-slate-500 hover:text-slate-800 dark:hover:text-white bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg transition-colors">Cancelar edición</button>
-            </div>
-            
-            <form id="job-form" class="grid grid-cols-1 md:grid-cols-12 gap-3.5">
-                <input type="hidden" id="edit-id" value="">
-
-                <div class="md:col-span-3">
-                    <label for="address-input" class="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">Dirección *</label>
-                    <input type="text" id="address-input" required placeholder="Ej. Calle Principal 12" 
-                        class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                <!-- Gestión de Técnicos -->
+                <div class="card sidebar-card">
+                    <h3>
+                        <span class="title-left"><i class="fa-solid fa-users text-indigo-400"></i> Personal</span>
+                        <button class="btn btn-primary" style="padding: 3px 7px; font-size: 0.72rem;" onclick="abrirModalTech()"><i class="fa-solid fa-plus"></i> Añadir</button>
+                    </h3>
+                    <div class="technicians-list" id="technicians-list-container"></div>
                 </div>
 
-                <div class="md:col-span-3">
-                    <label for="status-input" class="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">Estado</label>
-                    <select id="status-input" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all cursor-pointer">
-                        <option value="Terminados">Trabajos terminados</option>
-                        <option value="Realizado por técnicos Elevia">Realizado por técnicos Elevia</option>
-                        <option value="Entregado a autónomo">Entregado a autónomo</option>
-                        <option value="Sin terminar" selected>Trabajos sin terminar</option>
-                        <option value="Otros">Otros</option>
-                    </select>
+                <!-- Resumen Semanal -->
+                <div class="card sidebar-card">
+                    <h3>
+                        <span class="title-left"><i class="fa-solid fa-list-check text-emerald-400"></i> Guardias Semanales</span>
+                        <span class="text-xs text-slate-400 font-mono-custom">(Vie-Vie)</span>
+                    </h3>
+                    <div class="weekly-summary-list" id="weekly-summary"></div>
                 </div>
 
-                <div class="md:col-span-2">
-                    <label for="technician-input" class="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">Técnico / Responsable</label>
-                    <input type="text" id="technician-input" placeholder="Ej. Juan / Autónomo X" 
-                        class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
-                </div>
-
-                <div class="md:col-span-2">
-                    <label for="expiry-input" class="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">Caducidad</label>
-                    <input type="date" id="expiry-input" 
-                        class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
-                </div>
-
-                <div class="md:col-span-1">
-                    <label for="notes-input" class="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">Nota / Historial</label>
-                    <input type="text" id="notes-input" placeholder="Ej. Falta acta" 
-                        class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
-                </div>
-
-                <div class="md:col-span-1 flex items-end">
-                    <button type="submit" id="submit-btn" title="Guardar registro"
-                        class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-medium py-2.5 rounded-xl text-sm shadow-lg shadow-indigo-600/35 transition-all active:scale-95 flex items-center justify-center">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
-                    </button>
-                </div>
-            </form>
-        </section>
-
-        <!-- FILTROS RÁPIDOS Y BUSCADOR -->
-        <div id="pdf-content-area" class="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl transition-colors">
-            
-            <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex flex-col lg:flex-row justify-between items-center gap-3 bg-slate-50/50 dark:bg-slate-900/60">
-                
-                <!-- Pestañas de Filtro Rápido -->
-                <div class="flex items-center gap-1.5 overflow-x-auto w-full lg:w-auto pb-1 lg:pb-0 no-print">
-                    <button onclick="setFilter('todos')" id="filter-btn-todos" class="filter-tab px-3 py-1.5 rounded-xl text-xs font-medium bg-indigo-600 text-white transition-all whitespace-nowrap">Todos</button>
-                    <button onclick="setFilter('Sin terminar')" id="filter-btn-Sin terminar" class="filter-tab px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all whitespace-nowrap">Sin terminar</button>
-                    <button onclick="setFilter('Terminados')" id="filter-btn-Terminados" class="filter-tab px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all whitespace-nowrap">Terminados</button>
-                    <button onclick="setFilter('proximos')" id="filter-btn-proximos" class="filter-tab px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all whitespace-nowrap">⚠️ Próximos/Caducados</button>
-                </div>
-                
-                <div class="flex items-center gap-3 w-full lg:w-auto">
-                    <div class="relative w-full lg:w-64 no-print">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                        </span>
-                        <input type="text" id="search-input" placeholder="Buscar dirección, notas..." 
-                            class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                <!-- Log de Auditoría en Tiempo Real -->
+                <div class="card sidebar-card">
+                    <h3>
+                        <span class="title-left"><i class="fa-solid fa-terminal text-cyan-400"></i> Actividad en Red</span>
+                        <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+                    </h3>
+                    <div class="audit-log" id="audit-log-container">
+                        <div class="audit-log-item">[Sistema] Terminal HUD conectada...</div>
                     </div>
-                    <button onclick="clearAllJobs()" class="no-print text-xs text-rose-600 dark:text-rose-400 hover:underline transition-colors font-medium whitespace-nowrap bg-rose-500/10 border border-rose-500/20 px-3 py-1.5 rounded-xl">Borrar todo</button>
                 </div>
-            </div>
-            
-            <!-- VISTA DE TABLA (Escritorio) -->
-            <div class="hidden md:block overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="border-b border-slate-200 dark:border-slate-800 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider bg-slate-100/50 dark:bg-slate-950/40">
-                            <th class="py-3 px-5">Dirección</th>
-                            <th class="py-3 px-5">Estado</th>
-                            <th class="py-3 px-5">Técnico</th>
-                            <th class="py-3 px-5">Caducidad</th>
-                            <th class="py-3 px-5">Historial / Notas</th>
-                            <th class="py-3 px-5 text-right no-print">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="job-table-body" class="divide-y divide-slate-200 dark:divide-slate-800/60 text-sm"></tbody>
-                </table>
-            </div>
+            </aside>
+        </div>
+    </div>
 
-            <!-- VISTA DE TARJETAS (Móviles) -->
-            <div id="job-cards-container" class="md:hidden p-4 space-y-3"></div>
-
-            <div id="empty-state" class="hidden py-16 text-center">
-                <svg class="w-12 h-12 mx-auto text-slate-400 dark:text-slate-700 mb-3" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
-                <p class="text-slate-600 dark:text-slate-400 font-medium text-sm">No hay registros que coincidan</p>
-                <p class="text-xs text-slate-400 dark:text-slate-600 mt-0.5">Prueba a cambiar el filtro o añade un nuevo aviso</p>
+    <!-- Modales -->
+    <div id="modal-overlay" class="modal-overlay">
+        <div class="modal-box">
+            <div class="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 mx-auto mb-4 text-xl">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 class="text-base font-bold text-white mb-2">¿Generar Nuevo Cuadrante?</h3>
+            <p class="text-xs text-slate-400 mb-5 leading-relaxed">El algoritmo recalculará las rotaciones anuales de forma equitativa. ¿Proceder?</p>
+            <div class="flex gap-3 justify-center">
+                <button class="btn btn-secondary" onclick="cerrarModalConfirmacion()">Cancelar</button>
+                <button class="btn btn-primary" onclick="ejecutarGeneracionAnual()">Confirmar</button>
             </div>
         </div>
-    </main>
+    </div>
 
-    <footer class="border-t border-slate-200 dark:border-slate-900 py-4 text-center text-[11px] text-slate-500 dark:text-slate-600 transition-colors">
-        <p>Control de Defectos OCA Pro • Sincronización en la nube activa</p>
-    </footer>
+    <div id="modal-tech" class="modal-overlay">
+        <div class="modal-box">
+            <div class="w-12 h-12 rounded-2xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400 mx-auto mb-4 text-xl">
+                <i class="fa-solid fa-user-plus"></i>
+            </div>
+            <h3 class="text-base font-bold text-white mb-2">Añadir Nuevo Técnico</h3>
+            <p class="text-xs text-slate-400 mb-4">Introduce el nombre del operador para integrarlo en la red.</p>
+            <input type="text" id="input-new-tech-name" placeholder="Nombre y apellidos..." class="config-input mb-5" style="padding: 9px; font-family: 'Inter', sans-serif;">
+            <div class="flex gap-3 justify-center">
+                <button class="btn btn-secondary" onclick="cerrarModalTech()">Cancelar</button>
+                <button class="btn btn-primary" onclick="guardarNuevoTecnico()">Registrar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast">Operación completada</div>
 
     <script>
         const SUPABASE_URL = 'https://nefnltsxblfpfrifdsgy.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_ICUgIbsQd736F6tkK1FxCw_DiyJiIFk';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let dbSupabase = null;
+        try { dbSupabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) {}
 
-        let cachedJobs = [];
-        let currentFilter = 'todos';
+        let currentYear = 2026;
+        let currentMonth = 8;
+        const monthsNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
-        const statusStyles = {
-            "Terminados": { bg: "bg-emerald-500/10", text: "text-emerald-600 dark:text-emerald-400", border: "border-emerald-500/20", dot: "bg-emerald-500" },
-            "Realizado por técnicos Elevia": { bg: "bg-violet-500/10", text: "text-violet-600 dark:text-violet-400", border: "border-violet-500/20", dot: "bg-violet-500" },
-            "Entregado a autónomo": { bg: "bg-amber-500/10", text: "text-amber-600 dark:text-amber-400", border: "border-amber-500/20", dot: "bg-amber-500" },
-            "Sin terminar": { bg: "bg-rose-500/10", text: "text-rose-600 dark:text-rose-400", border: "border-rose-500/20", dot: "bg-rose-500" },
-            "Otros": { bg: "bg-sky-500/10", text: "text-sky-600 dark:text-sky-400", border: "border-sky-500/20", dot: "bg-sky-500" }
+        let tarifas = { lab: 28, fes: 70 };
+        let tecnicos = [
+            { id: 1, name: "J.Carlos", color: "#facc15" },
+            { id: 2, name: "Óscar Ibarreta", color: "#ef4444" },
+            { id: 3, name: "Lucas", color: "#d946ef" },
+            { id: 4, name: "Óscar Ibañez", color: "#3b82f6" }
+        ];
+        let guardiasSemanas = {};
+
+        const cuadranteOficial2026 = {
+            "2026-01-02": "J.Carlos", "2026-01-09": "Óscar Ibarreta", "2026-01-16": "Lucas", "2026-01-23": "Óscar Ibañez",
+            "2026-01-30": "J.Carlos", "2026-02-06": "Óscar Ibarreta", "2026-02-13": "Lucas", "2026-02-20": "Óscar Ibañez",
+            "2026-02-27": "J.Carlos", "2026-03-06": "Óscar Ibarreta", "2026-03-13": "Lucas", "2026-03-20": "Óscar Ibañez",
+            "2026-03-27": "J.Carlos", "2026-04-03": "Óscar Ibarreta", "2026-04-10": "Lucas", "2026-04-17": "Óscar Ibañez", "2026-04-24": "J.Carlos",
+            "2026-05-01": "Óscar Ibarreta", "2026-05-08": "Lucas", "2026-05-15": "Óscar Ibañez", "2026-05-22": "J.Carlos",
+            "2026-05-29": "Óscar Ibarreta", "2026-06-05": "Lucas", "2026-06-12": "Óscar Ibañez", "2026-06-19": "J.Carlos", "2026-06-26": "Óscar Ibarreta",
+            "2026-07-03": "Lucas", "2026-07-10": "Óscar Ibarreta", "2026-07-17": "J.Carlos", "2026-07-24": "Óscar Ibañez",
+            "2026-07-31": "J.Carlos", "2026-08-07": "Óscar Ibarreta", "2026-08-14": "Lucas", "2026-08-21": "Óscar Ibarreta", "2026-08-28": "Lucas",
+            "2026-09-04": "J.Carlos", "2026-09-11": "Óscar Ibañez", "2026-09-18": "Lucas", "2026-09-25": "Óscar Ibarreta",
+            "2026-10-02": "Óscar Ibañez", "2026-10-09": "J.Carlos", "2026-10-16": "Óscar Ibarreta", "2026-10-23": "Lucas", "2026-10-30": "Óscar Ibañez",
+            "2026-11-06": "J.Carlos", "2026-11-13": "Óscar Ibarreta", "2026-11-20": "Lucas", "2026-11-27": "Óscar Ibañez",
+            "2026-12-04": "J.Carlos", "2026-12-11": "Óscar Ibarreta", "2026-12-18": "Lucas", "2026-12-25": "Óscar Ibañez"
         };
 
-        // Gestión de Tema Oscuro / Claro
-        function toggleTheme() {
-            const html = document.documentElement;
-            if (html.classList.contains('dark')) {
-                html.classList.remove('dark');
-                localStorage.setItem('theme', 'light');
-            } else {
-                html.classList.add('dark');
-                localStorage.setItem('theme', 'dark');
-            }
+        const festivosOficiales = {
+            "0-1": [{type: "nac", label: "Año Nuevo"}], "0-6": [{type: "nac", label: "Epifanía"}], "2-19": [{type: "loc", label: "San José"}],
+            "4-1": [{type: "nac", label: "Trabajo"}], "7-15": [{type: "nac", label: "Asunción"}], "9-9": [{type: "aut", label: "C. Valenciana"}],
+            "9-12": [{type: "nac", label: "Fiesta Nacional"}], "10-1": [{type: "nac", label: "Todos los Santos"}], "11-25": [{type: "nac", label: "Navidad"}]
+        };
+
+        function playBeep(tipo = 'click') {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = tipo === 'success' ? 'sine' : 'triangle';
+                osc.frequency.setValueAtTime(tipo === 'success' ? 880 : 440, ctx.currentTime);
+                if(tipo === 'success') osc.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.05, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+                osc.connect(gain); gain.connect(ctx.destination);
+                osc.start(); osc.stop(ctx.currentTime + 0.15);
+            } catch(e) {}
         }
 
-        if (localStorage.getItem('theme') === 'light') {
-            document.documentElement.classList.remove('dark');
+        function cambiarTemaHUD(tema) {
+            document.documentElement.setAttribute('data-theme', tema);
+            playBeep('click');
+            showToast(`🎨 Tema HUD cambiado a ${tema.toUpperCase()}`);
+            logAudit(`Tema cambiado a ${tema}`);
         }
 
-        // Control de Conexión Online/Offline
-        window.addEventListener('online', updateConnectionStatus);
-        window.addEventListener('offline', updateConnectionStatus);
-
-        function updateConnectionStatus() {
-            const isOnline = navigator.onLine;
-            const statusEl = document.getElementById('connection-status');
-            const textEl = document.getElementById('connection-text');
-            if (isOnline) {
-                statusEl.className = "flex items-center gap-1.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400";
-                statusEl.querySelector('span').className = "h-2 w-2 rounded-full bg-emerald-500 animate-pulse";
-                textEl.textContent = "Online";
-            } else {
-                statusEl.className = "flex items-center gap-1.5 text-[11px] font-medium text-rose-600 dark:text-rose-400";
-                statusEl.querySelector('span').className = "h-2 w-2 rounded-full bg-rose-500";
-                textEl.textContent = "Offline";
-            }
+        function showToast(msg) {
+            const t = document.getElementById('toast'); t.innerText = msg; t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
         }
 
-        async function fetchJobs() {
-            const { data, error } = await supabase
-                .from('ocas_inspecciones')
-                .select('*')
-                .order('created_at', { ascending: false });
-
-            if (error) {
-                console.error('Error al cargar datos:', error);
-                return [];
-            }
-            
-            cachedJobs = (data || []).map(item => ({
-                id: item.id,
-                address: item.lugar_instalacion,
-                status: item.estado || 'Sin terminar',
-                technician: item.tecnico || '',
-                expiryDate: item.fecha_inspeccion || '',
-                notes: item.observaciones || ''
-            }));
-            
-            return cachedJobs;
+        function logAudit(msg) {
+            const container = document.getElementById('audit-log-container');
+            if (!container) return;
+            const time = new Date().toLocaleTimeString();
+            container.innerHTML += `<div class="audit-log-item">[${time}] ${msg}</div>`;
+            container.scrollTop = container.scrollHeight;
         }
 
-        function setFilter(filter) {
-            currentFilter = filter;
-            document.querySelectorAll('.filter-tab').forEach(btn => {
-                btn.className = "filter-tab px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all whitespace-nowrap";
-            });
-            const activeBtn = document.getElementById(`filter-btn-${filter}`);
-            if (activeBtn) {
-                activeBtn.className = "filter-tab px-3 py-1.5 rounded-xl text-xs font-medium bg-indigo-600 text-white transition-all whitespace-nowrap";
-            }
-            renderJobs();
+        function updateNetworkStatus(status, text) {
+            const dot = document.getElementById('net-dot');
+            const txt = document.getElementById('net-text');
+            dot.className = `net-dot ${status}`;
+            txt.innerText = text;
         }
 
-        async function renderJobs() {
-            const jobs = await fetchJobs();
-            const tbody = document.getElementById('job-table-body');
-            const cardsContainer = document.getElementById('job-cards-container');
-            const emptyState = document.getElementById('empty-state');
-            const counterBadge = document.getElementById('counter-badge');
-            const searchTerm = document.getElementById('search-input').value.toLowerCase();
-            
-            if (tbody) tbody.innerHTML = '';
-            if (cardsContainer) cardsContainer.innerHTML = '';
-
-            const todayStr = new Date().toISOString().slice(0, 10);
-
-            const filteredJobs = jobs.filter(job => {
-                const matchesSearch = job.address.toLowerCase().includes(searchTerm) || 
-                                      (job.notes && job.notes.toLowerCase().includes(searchTerm)) ||
-                                      (job.technician && job.technician.toLowerCase().includes(searchTerm));
-                
-                if (!matchesSearch) return false;
-
-                if (currentFilter === 'todos') return true;
-                if (currentFilter === 'Sin terminar') return job.status === 'Sin terminar';
-                if (currentFilter === 'Terminados') return job.status === 'Terminados';
-                if (currentFilter === 'proximos') {
-                    const isExpired = job.expiryDate && job.expiryDate < todayStr && job.status !== 'Terminados';
-                    return isExpired;
-                }
-                return true;
-            });
-
-            counterBadge.textContent = `${filteredJobs.length} de ${jobs.length} registros`;
-
-            if (filteredJobs.length === 0) {
-                emptyState.classList.remove('hidden');
-                return;
-            } else {
-                emptyState.classList.add('hidden');
-            }
-
-            filteredJobs.forEach((job) => {
-                const style = statusStyles[job.status] || statusStyles["Otros"];
-                
-                let expiryHtml = '<span class="text-slate-400 dark:text-slate-600 italic text-xs">Sin fecha</span>';
-                if (job.expiryDate) {
-                    const isExpired = job.expiryDate < todayStr && job.status !== 'Terminados';
-                    const formattedDate = job.expiryDate.split('-').reverse().join('/');
-                    expiryHtml = `
-                        <span class="inline-flex items-center gap-1 text-xs ${isExpired ? 'text-rose-600 dark:text-rose-400 font-bold bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20' : 'text-slate-700 dark:text-slate-300'}">
-                            ${isExpired ? '⚠️ ' : ''}${formattedDate}
-                        </span>
-                    `;
-                }
-
-                // Historial de notas formateado con fecha actual si se añade nueva nota rápida
-                let notesFormatted = job.notes ? escapeHtml(job.notes) : '<span class="text-slate-400 dark:text-slate-600 italic">Sin notas</span>';
-                
-                // 1. Tabla (Escritorio)
-                if (tbody) {
-                    const tr = document.createElement('tr');
-                    tr.className = "hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors group animate-fade-in";
-                    tr.innerHTML = `
-                        <td class="py-3.5 px-5 font-medium text-slate-800 dark:text-slate-200 text-xs sm:text-sm">
-                            <div class="flex items-center gap-2">
-                                <button type="button" onclick="toggleDone('${job.id}')" title="Marcar como hecho" class="no-print w-4 h-4 rounded border ${job.status === 'Terminados' ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900'} flex items-center justify-center transition-colors">
-                                    ${job.status === 'Terminados' ? '✓' : ''}
-                                </button>
-                                <span>${escapeHtml(job.address)}</span>
-                            </div>
-                        </td>
-                        <td class="py-3.5 px-5">
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border ${style.bg} ${style.text} ${style.border} whitespace-nowrap shadow-sm">
-                                <span class="h-1.5 w-1.5 rounded-full ${style.dot}"></span>
-                                ${job.status}
-                            </span>
-                        </td>
-                        <td class="py-3.5 px-5 text-xs text-slate-600 dark:text-slate-400">${job.technician ? escapeHtml(job.technician) : '<span class="text-slate-400 dark:text-slate-600 italic">-</span>'}</td>
-                        <td class="py-3.5 px-5">${expiryHtml}</td>
-                        <td class="py-3.5 px-5 text-slate-600 dark:text-slate-400 text-xs max-w-xs truncate">${notesFormatted}</td>
-                        <td class="py-3.5 px-5 text-right space-x-1 no-print">
-                            <button type="button" onclick="editJob('${job.id}')" class="text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors p-1.5 rounded-lg hover:bg-indigo-500/10" title="Editar">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                            </button>
-                            <button type="button" onclick="deleteJob('${job.id}')" class="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors p-1.5 rounded-lg hover:bg-rose-500/10" title="Eliminar">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                            </button>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                }
-
-                // 2. Tarjetas (Móviles)
-                if (cardsContainer) {
-                    const card = document.createElement('div');
-                    card.className = "bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 rounded-xl p-3.5 space-y-2.5 animate-fade-in";
-                    card.innerHTML = `
-                        <div class="flex items-start justify-between gap-2">
-                            <div class="flex items-center gap-2">
-                                <button type="button" onclick="toggleDone('${job.id}')" title="Marcar como hecho" class="no-print w-5 h-5 rounded border ${job.status === 'Terminados' ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900'} flex items-center justify-center transition-colors">
-                                    ${job.status === 'Terminados' ? '✓' : ''}
-                                </button>
-                                <span class="font-medium text-sm text-slate-800 dark:text-slate-200">${escapeHtml(job.address)}</span>
-                            </div>
-                            <div class="flex items-center gap-1 no-print">
-                                <button type="button" onclick="editJob('${job.id}')" class="text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 p-1">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                </button>
-                                <button type="button" onclick="deleteJob('${job.id}')" class="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 p-1">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="flex flex-wrap items-center justify-between gap-2 text-xs pt-1 border-t border-slate-200 dark:border-slate-900">
-                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium border ${style.bg} ${style.text} ${style.border}">
-                                <span class="h-1.5 w-1.5 rounded-full ${style.dot}"></span>
-                                ${job.status}
-                            </span>
-                            ${job.technician ? `<span class="text-slate-500 dark:text-slate-400">👤 ${escapeHtml(job.technician)}</span>` : ''}
-                            <div>${expiryHtml}</div>
-                        </div>
-                        ${job.notes ? `<div class="text-xs text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900/50 p-2 rounded-lg border border-slate-200 dark:border-slate-800">💬 ${notesFormatted}</div>` : ''}
-                    `;
-                    cardsContainer.appendChild(card);
-                }
-            });
+        function getFestivos(m, d) {
+            let f = []; const dayW = new Date(currentYear, m, d).getDay();
+            if (dayW === 0 || dayW === 6) f.push({ type: "fin", label: "Fin de semana" });
+            if (festivosOficiales[`${m}-${d}`]) f = f.concat(festivosOficiales[`${m}-${d}`]);
+            return f;
         }
 
-        async function toggleDone(id) {
-            const job = cachedJobs.find(j => j.id === id);
-            if (!job) return;
-            const newStatus = job.status === 'Terminados' ? 'Sin terminar' : 'Terminados';
-            await supabase.from('ocas_inspecciones').update({ estado: newStatus }).eq('id', id);
-        }
-
-        function editJob(id) {
-            const job = cachedJobs.find(j => j.id === id);
-            if (!job) return;
-
-            document.getElementById('edit-id').value = job.id;
-            document.getElementById('address-input').value = job.address;
-            document.getElementById('status-input').value = job.status;
-            document.getElementById('technician-input').value = job.technician || '';
-            document.getElementById('expiry-input').value = job.expiryDate || '';
-            document.getElementById('notes-input').value = job.notes || '';
-
-            document.getElementById('form-title').innerHTML = `
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                Editando Registro
-            `;
-            document.getElementById('cancel-edit-btn').classList.remove('hidden');
-            document.getElementById('submit-btn').innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>`;
-            
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function resetForm() {
-            document.getElementById('edit-id').value = '';
-            document.getElementById('job-form').reset();
-            document.getElementById('status-input').value = 'Sin terminar';
-            document.getElementById('form-title').innerHTML = `
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                Registrar Nuevo Defecto / Dirección
-            `;
-            document.getElementById('cancel-edit-btn').classList.add('hidden');
-            document.getElementById('submit-btn').innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>`;
-        }
-
-        function downloadPDF() {
-            const element = document.getElementById('pdf-content-area');
-            const noPrintElements = document.querySelectorAll('.no-print');
-            noPrintElements.forEach(el => el.style.display = 'none');
-
-            const options = {
-                margin:       10,
-                filename:     `Listado-Defectos-OCA-${new Date().toISOString().slice(0, 10)}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, backgroundColor: document.documentElement.classList.contains('dark') ? '#020617' : '#ffffff' },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
-            };
-
-            html2pdf().from(element).set(options).save().then(() => {
-                noPrintElements.forEach(el => el.style.display = '');
-            });
-        }
-
-        function shareWhatsApp() {
-            if (cachedJobs.length === 0) {
-                alert('No hay registros para enviar.');
-                return;
-            }
-
-            let text = "📋 *CONTROL DE DEFECTOS OCA* 📋\n\n";
-            cachedJobs.forEach((job, index) => {
-                let expiry = job.expiryDate ? job.expiryDate.split('-').reverse().join('/') : 'Sin fecha';
-                text += `*${index + 1}. ${job.address}*\n`;
-                text += `• Estado: ${job.status}\n`;
-                if (job.technician) text += `• Técnico: ${job.technician}\n`;
-                text += `• Caducidad: ${expiry}\n`;
-                if (job.notes) text += `• Notas: ${job.notes}\n`;
-                text += `---------------------------\n`;
-            });
-
-            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
-        }
-
-        function exportData() {
-            if (cachedJobs.length === 0) {
-                alert('No hay datos.');
-                return;
-            }
-            const blob = new Blob([JSON.stringify(cachedJobs, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `backup-oca-${new Date().toISOString().slice(0, 10)}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        async function importData(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = async function(e) {
+        async function init() {
+            if (dbSupabase) {
                 try {
-                    const imported = JSON.parse(e.target.result);
-                    if (Array.isArray(imported)) {
-                        if (confirm(`¿Importar estos datos a Supabase?`)) {
-                            for (const item of imported) {
-                                await supabase.from('ocas_inspecciones').insert([{
-                                    lugar_instalacion: item.address || item.lugar_instalacion,
-                                    estado: item.status || 'Sin terminar',
-                                    tecnico: item.technician || item.tecnico || '',
-                                    fecha_inspeccion: item.expiryDate || item.fecha_inspeccion || null,
-                                    observaciones: item.notes || item.observaciones || ''
-                                }]);
-                            }
-                            alert('¡Importación completada!');
-                        }
+                    updateNetworkStatus('sync', 'Sincronizando');
+                    let { data: guardData } = await dbSupabase.from('guardias_semanas').select('*');
+                    if (guardData && guardData.length > 0) {
+                        guardiasSemanas = {};
+                        guardData.forEach(r => guardiasSemanas[r.fecha_inicio] = r.tecnico);
                     }
-                } catch (err) {
-                    alert('Error al procesar el archivo JSON.');
+
+                    let { data: techData } = await dbSupabase.from('tecnicos').select('*');
+                    if (techData && techData.length > 0) tecnicos = techData;
+
+                    let { data: configData } = await dbSupabase.from('configuracion').select('*').eq('key', 'tarifas').maybeSingle();
+                    if (configData && configData.value) {
+                        tarifas = configData.value;
+                        document.getElementById('rate-lab').value = tarifas.lab;
+                        document.getElementById('rate-fes').value = tarifas.fes;
+                    }
+                    updateNetworkStatus('online', 'En Línea');
+                    logAudit("Sincronización con Supabase exitosa.");
+
+                    // Suscripción en Tiempo Real con Supabase Realtime
+                    dbSupabase.channel('public:guardias_semanas')
+                        .on('postgres_changes', { event: '*', schema: 'public', table: 'guardias_semanas' }, payload => {
+                            if (payload.new && payload.new.fecha_inicio) {
+                                guardiasSemanas[payload.new.fecha_inicio] = payload.new.tecnico;
+                                render();
+                                logAudit(`Actualización en vivo: Sem. ${payload.new.fecha_inicio} -> ${payload.new.tecnico}`);
+                                showToast("⚡ Actualización en tiempo real recibida");
+                            }
+                        })
+                        .subscribe((status) => {
+                            if (status === 'SUBSCRIBED') {
+                                updateNetworkStatus('online', 'En Tiempo Real');
+                            } else {
+                                updateNetworkStatus('sync', 'Reconectando');
+                            }
+                        });
+
+                } catch(err) {
+                    console.error("Error conectando con Supabase:", err);
+                    updateNetworkStatus('offline', 'Modo Local');
+                    logAudit("Error de red. Activado modo local.");
+                    showToast("⚠️ Modo local activado (Sin conexión)");
                 }
-            };
-            reader.readAsText(file);
-            event.target.value = '';
-        }
-
-        document.getElementById('job-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const editId = document.getElementById('edit-id').value;
-            
-            const jobData = {
-                lugar_instalacion: document.getElementById('address-input').value.trim(),
-                estado: document.getElementById('status-input').value,
-                tecnico: document.getElementById('technician-input').value.trim(),
-                fecha_inspeccion: document.getElementById('expiry-input').value || null,
-                observaciones: document.getElementById('notes-input').value.trim()
-            };
-
-            if (editId) {
-                await supabase.from('ocas_inspecciones').update(jobData).eq('id', editId);
             } else {
-                await supabase.from('ocas_inspecciones').insert([jobData]);
+                updateNetworkStatus('offline', 'Local');
             }
 
-            resetForm();
-        });
+            if (Object.keys(guardiasSemanas).length === 0) guardiasSemanas = { ...cuadranteOficial2026 };
+            updateTechFilterOptions();
+            render();
+        }
 
-        document.getElementById('search-input').addEventListener('input', () => renderJobs());
+        function updateTechFilterOptions() {
+            const select = document.getElementById('filter-tech-select');
+            let currentVal = select.value;
+            select.innerHTML = '<option value="all">Filtro: Todos</option>';
+            tecnicos.forEach(t => {
+                select.innerHTML += `<option value="${t.name}">${t.name}</option>`;
+            });
+            select.value = currentVal;
+        }
 
-        async function deleteJob(id) {
-            if (confirm('¿Eliminar este registro?')) {
-                await supabase.from('ocas_inspecciones').delete().eq('id', id);
+        function abrirModalConfirmacion() { playBeep('click'); document.getElementById('modal-overlay').classList.add('show'); }
+        function cerrarModalConfirmacion() { document.getElementById('modal-overlay').classList.remove('show'); }
+
+        function abrirModalTech() { 
+            playBeep('click'); 
+            document.getElementById('input-new-tech-name').value = '';
+            document.getElementById('modal-tech').classList.add('show'); 
+            document.getElementById('input-new-tech-name').focus();
+        }
+        function cerrarModalTech() { document.getElementById('modal-tech').classList.remove('show'); }
+
+        async function ejecutarGeneracionAnual() {
+            cerrarModalConfirmacion();
+            playBeep('success');
+            let keys = Object.keys(cuadranteOficial2026).sort();
+            let techNames = tecnicos.map(t => t.name);
+            let idx = Math.floor(Math.random() * techNames.length);
+            
+            guardiasSemanas = {};
+            keys.forEach(k => {
+                guardiasSemanas[k] = techNames[idx % techNames.length];
+                idx++;
+            });
+
+            if (dbSupabase) {
+                try {
+                    let rows = Object.keys(guardiasSemanas).map(k => ({ fecha_inicio: k, tecnico: guardiasSemanas[k] }));
+                    await dbSupabase.from('guardias_semanas').upsert(rows, { onConflict: ['fecha_inicio'] });
+                } catch(e) {
+                    showToast("⚠️ Error al sincronizar nuevo cuadrante");
+                }
+            }
+            render();
+            showToast("✨ Nuevo cuadrante generado con rotación equitativa");
+            logAudit("Generado nuevo cuadrante anual automático.");
+        }
+
+        async function actualizarTarifas() {
+            tarifas.lab = parseFloat(document.getElementById('rate-lab').value) || 0;
+            tarifas.fes = parseFloat(document.getElementById('rate-fes').value) || 0;
+            playBeep('click');
+            
+            if (dbSupabase) {
+                try {
+                    await dbSupabase.from('configuracion').upsert({ key: 'tarifas', value: tarifas }, { onConflict: ['key'] });
+                } catch(e) {}
+            }
+            render();
+            showToast("💰 Tarifas actualizadas");
+            logAudit(`Tarifas cambiadas: Lab ${tarifas.lab}€ | Fes ${tarifas.fes}€`);
+        }
+
+        function render() {
+            document.getElementById('current-month-label').innerText = `${monthsNames[currentMonth].toUpperCase()} ${currentYear}`;
+            renderActiveGuardBanner();
+            renderCalendar();
+            renderWeekly();
+            renderTechniciansManager();
+            renderStats();
+        }
+
+        function renderActiveGuardBanner() {
+            let today = new Date();
+            let dCheck = new Date(today);
+            while (dCheck.getDay() !== 5) { dCheck.setDate(dCheck.getDate() - 1); }
+            let fechaStr = dCheck.toISOString().split('T')[0];
+            
+            let tecnicoActual = guardiasSemanas[fechaStr] || "Sin asignar";
+            let fechaFin = new Date(dCheck); fechaFin.setDate(fechaFin.getDate() + 7);
+
+            let tObj = tecnicos.find(t => t.name === tecnicoActual);
+            let color = tObj ? tObj.color : '#3b82f6';
+
+            document.getElementById('active-tech-name').innerText = tecnicoActual;
+            document.getElementById('active-tech-name').style.color = color;
+            document.getElementById('active-tech-icon').style.color = color;
+            document.getElementById('active-guard-dates').innerText = `Del ${dCheck.getDate()}/${dCheck.getMonth()+1} al ${fechaFin.getDate()}/${fechaFin.getMonth()+1}`;
+        }
+
+        function renderCalendar() {
+            const c = document.getElementById('calendar-grid-container');
+            c.innerHTML = '<div class="cal-header">Lun</div><div class="cal-header">Mar</div><div class="cal-header">Mié</div><div class="cal-header">Jue</div><div class="cal-header">Vie</div><div class="cal-header">Sáb</div><div class="cal-header">Dom</div>';
+            
+            const firstIdx = (new Date(currentYear, currentMonth, 1).getDay() + 6) % 7;
+            const totalDays = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const prevDays = new Date(currentYear, currentMonth, 0).getDate();
+            const filtroTech = document.getElementById('filter-tech-select').value;
+
+            for (let i = firstIdx - 1; i >= 0; i--) {
+                c.innerHTML += `<div class="cal-cell other-month"><span class="day-num">${prevDays - i}</span></div>`;
+            }
+
+            for (let day = 1; day <= totalDays; day++) {
+                const festivos = getFestivos(currentMonth, day);
+                const isFest = festivos.length > 0;
+                let dtObj = new Date(currentYear, currentMonth, day);
+
+                let techG = "";
+                for (let k = 0; k < 7; k++) {
+                    let dCheck = new Date(dtObj); dCheck.setDate(dCheck.getDate() - k);
+                    if (dCheck.getDay() === 5) {
+                        let fStr = dCheck.toISOString().split('T')[0];
+                        if (guardiasSemanas[fStr]) techG = guardiasSemanas[fStr];
+                        break;
+                    }
+                }
+                let tObj = tecnicos.find(t => t.name === techG);
+                let color = tObj ? tObj.color : '#64748b';
+
+                let isDimmed = (filtroTech !== 'all' && techG !== filtroTech);
+                let icons = '';
+                festivos.forEach(f => { if(f.type !== 'fin') icons += `<span class="fest-icon fest-${f.type}">${f.type.toUpperCase()}</span>`; });
+
+                c.innerHTML += `
+                    <div class="cal-cell ${isFest ? 'is-festivo' : ''} ${isDimmed ? 'dimmed' : ''}">
+                        <div class="day-header-row"><span class="day-num">${day}</span><div class="fest-icons">${icons}</div></div>
+                        ${techG ? `<div class="guardia-banner" style="background-color:${color}20; color:${color}; border:1px solid ${color}40">${techG.split(' ')[0]}</div>` : ''}
+                        <div class="day-rates">
+                            <div class="rate-row lab"><span>Lab</span><span class="rate-val">${tarifas.lab}€</span></div>
+                            <div class="rate-row fes"><span>Fes</span><span class="rate-val">${tarifas.fes}€</span></div>
+                        </div>
+                    </div>
+                `;
             }
         }
 
-        async function clearAllJobs() {
-            if (confirm('¿Estás seguro de vaciar todos los registros?')) {
-                await supabase.from('ocas_inspecciones').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        function renderWeekly() {
+            const container = document.getElementById('weekly-summary');
+            container.innerHTML = '';
+            let d = new Date(currentYear, currentMonth, 1);
+            while (d.getDay() !== 5) { d.setDate(d.getDate() - 1); }
+            let finMes = new Date(currentYear, currentMonth + 1, 0);
+
+            while (d <= finMes) {
+                let fechaStr = d.toISOString().split('T')[0];
+                let tecnico = guardiasSemanas[fechaStr] || "Sin asignar";
+                let fechaFin = new Date(d); fechaFin.setDate(fechaFin.getDate() + 7);
+
+                let totalSemana = 0; let dCalc = new Date(d);
+                for(let i = 0; i < 7; i++) {
+                    totalSemana += getFestivos(dCalc.getMonth(), dCalc.getDate()).length > 0 ? tarifas.fes : tarifas.lab;
+                    dCalc.setDate(dCalc.getDate() + 1);
+                }
+                let tObj = tecnicos.find(t => t.name === tecnico);
+                let color = tObj ? tObj.color : '#64748b';
+
+                container.innerHTML += `
+                    <div class="weekly-item">
+                        <div class="weekly-header">Del ${d.getDate()} ${monthsNames[d.getMonth()]} al ${fechaFin.getDate()} ${monthsNames[fechaFin.getMonth()]}</div>
+                        <div class="weekly-details">
+                            <div class="weekly-tech">
+                                <span class="tech-color-dot" style="background:${color}; color:${color}"></span>
+                                <select onchange="cambiarTecnico('${fechaStr}', this.value)" style="border:1px solid var(--border); background:var(--bg-app); color:var(--text-main); border-radius:6px; padding:3px 6px; font-weight:600; font-size:0.8rem;">
+                                    ${tecnicos.map(t => `<option value="${t.name}" ${t.name === tecnico ? 'selected' : ''}>${t.name}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="weekly-pay">${totalSemana} €</div>
+                        </div>
+                    </div>
+                `;
+                d.setDate(d.getDate() + 7);
             }
         }
 
-        function escapeHtml(text) {
-            if (!text) return '';
-            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-            return text.toString().replace(/[&<>"']/g, m => map[m]);
+        function renderTechniciansManager() {
+            const container = document.getElementById('technicians-list-container');
+            container.innerHTML = '';
+            tecnicos.forEach(t => {
+                container.innerHTML += `
+                    <div class="tech-badge-row">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="tech-color-dot" style="background:${t.color}; color:${t.color}"></span>
+                            <span style="font-weight: 600;">${t.name}</span>
+                        </div>
+                        <button onclick="removeTechnician('${t.name}')" class="btn btn-secondary" style="padding: 2px 5px; font-size: 0.68rem; color: #f87171;" title="Baja"><i class="fa-solid fa-user-minus"></i></button>
+                    </div>
+                `;
+            });
         }
 
-        // Inicialización y canales en tiempo real de Supabase
-        document.addEventListener('DOMContentLoaded', () => {
-            updateConnectionStatus();
-            renderJobs();
+        function renderStats() {
+            const container = document.getElementById('stats-grid-container');
+            container.innerHTML = '';
+            let conteo = {};
+            tecnicos.forEach(t => conteo[t.name] = 0);
+            let totalGuards = 0;
+            for (let k in guardiasSemanas) {
+                let tech = guardiasSemanas[k];
+                if (conteo[tech] !== undefined) { conteo[tech]++; totalGuards++; }
+            }
+            tecnicos.forEach(t => {
+                let count = conteo[t.name] || 0;
+                let pct = totalGuards > 0 ? Math.round((count / totalGuards) * 100) : 0;
+                container.innerHTML += `
+                    <div class="stat-row">
+                        <div class="flex justify-between font-semibold">
+                            <span>${t.name}</span>
+                            <span class="font-mono-custom">${count} sem (${pct}%)</span>
+                        </div>
+                        <div class="stat-bar-bg"><div class="stat-bar-fill" style="width: ${pct}%; background: ${t.color};"></div></div>
+                    </div>
+                `;
+            });
+        }
 
-            supabase
-                .channel('public:ocas_inspecciones')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'ocas_inspecciones' }, () => {
-                    renderJobs();
-                })
-                .subscribe();
-        });
+        async function guardarNuevoTecnico() {
+            let nombre = document.getElementById('input-new-tech-name').value.trim();
+            if (!nombre) { showToast("⚠️ Introduce un nombre válido"); return; }
+            if (tecnicos.some(t => t.name.toLowerCase() === nombre.toLowerCase())) { showToast("⚠️ Este técnico ya existe"); return; }
+            
+            let colores = ["#38bdf8", "#34d399", "#a78bfa", "#fbbf24", "#f43f5e", "#06b6d4"];
+            let color = colores[tecnicos.length % colores.length];
+            let nuevoTech = { id: tecnicos.length + 1, name: nombre, color: color };
+            tecnicos.push(nuevoTech);
+
+            if (dbSupabase) {
+                try { await dbSupabase.from('tecnicos').upsert(nuevoTech, { onConflict: ['name'] }); } catch(e) {}
+            }
+
+            cerrarModalTech();
+            updateTechFilterOptions();
+            playBeep('success');
+            render();
+            showToast(`✅ Técnico ${nombre} incorporado`);
+            logAudit(`Técnico registrado: ${nombre}`);
+        }
+
+        async function removeTechnician(name) {
+            if (tecnicos.length <= 1) { showToast("⚠️ No se puede eliminar al último técnico"); return; }
+            if (confirm(`¿Dar de baja a ${name}?`)) {
+                tecnicos = tecnicos.filter(t => t.name !== name);
+                let fallback = tecnicos[0].name;
+                for (let k in guardiasSemanas) { if (guardiasSemanas[k] === name) guardiasSemanas[k] = fallback; }
+                
+                if (dbSupabase) {
+                    try { await dbSupabase.from('tecnicos').delete().eq('name', name); } catch(e) {}
+                }
+
+                updateTechFilterOptions();
+                playBeep('click');
+                render();
+                showToast(`ℹ️ Técnico dado de baja`);
+                logAudit(`Técnico dado de baja: ${name}`);
+            }
+        }
+
+        async function cambiarTecnico(fechaStr, nuevo) {
+            guardiasSemanas[fechaStr] = nuevo;
+            playBeep('success');
+            if (dbSupabase) {
+                try {
+                    await dbSupabase.from('guardias_semanas').upsert({ fecha_inicio: fechaStr, tecnico: nuevo }, { onConflict: ['fecha_inicio'] });
+                } catch(e) {
+                    showToast("⚠️ Error al sincronizar cambio");
+                }
+            }
+            render(); 
+            showToast("☁️ Guardia reasignada con éxito");
+            logAudit(`Guardia ${fechaStr} -> ${nuevo}`);
+        }
+
+        function changeMonth(dir) {
+            currentMonth += dir;
+            if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+            else if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+            playBeep('click');
+            render();
+        }
+
+        init();
     </script>
 </body>
 </html>
