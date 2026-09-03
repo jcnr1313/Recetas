@@ -1,12 +1,19 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control de Defectos OCA</title>
+    <title>Control de Defectos OCA Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {}
+            }
+        }
+    </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <!-- SDK de Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style> 
@@ -16,78 +23,90 @@
             from { opacity: 0; transform: translateY(-8px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        @keyframes fadeOut {
-            from { opacity: 1; transform: scale(1); }
-            to { opacity: 0; transform: scale(0.95); }
-        }
         .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
-        .animate-fade-out { animation: fadeOut 0.2s ease-in forwards; }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
+<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col justify-between transition-colors duration-200">
 
-    <header class="border-b border-slate-800 bg-slate-950/90 backdrop-blur-md sticky top-0 z-50">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-3">
+    <!-- HEADER -->
+    <header class="border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/90 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
             <div class="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-start">
                 <div class="flex items-center space-x-3">
                     <div class="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-violet-600 to-fuchsia-600 flex items-center justify-center shadow-lg shadow-indigo-600/30 ring-1 ring-white/10">
                         <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                     </div>
                     <div>
-                        <h1 class="text-sm font-bold tracking-tight text-white flex items-center gap-2">
-                            Control Defectos OCA
-                            <span class="text-[10px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded-full font-medium">Elevia Pro</span>
+                        <h1 class="text-sm font-bold tracking-tight flex items-center gap-2">
+                            Defectos OCA
+                            <span class="text-[10px] bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded-full font-medium">Pro Suite</span>
                         </h1>
-                        <p class="text-[11px] text-slate-400" id="counter-badge">0 registros</p>
+                        <div class="flex items-center gap-2 mt-0.5">
+                            <span id="counter-badge" class="text-[11px] text-slate-500 dark:text-slate-400">0 registros</span>
+                            <span class="text-slate-300 dark:text-slate-700">•</span>
+                            <div id="connection-status" class="flex items-center gap-1.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+                                <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                <span id="connection-text">Online</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
+                <!-- Botón Tema móvil -->
+                <button onclick="toggleTheme()" class="sm:hidden p-2 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300">
+                    <svg id="theme-icon-mobile" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                </button>
             </div>
             
             <div class="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap">
-                <button onclick="downloadPDF()" title="Descargar listado en PDF" class="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-xl bg-rose-600/20 border border-rose-500/30 text-rose-400 hover:bg-rose-600/30 hover:border-rose-500 transition-all active:scale-95 shadow-sm">
+                <button onclick="downloadPDF()" title="Descargar PDF" class="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 transition-all active:scale-95">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                     <span>PDF</span>
                 </button>
-                <button onclick="shareWhatsApp()" title="Enviar listado por WhatsApp" class="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-xl bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-600/30 hover:border-emerald-500 transition-all active:scale-95 shadow-sm">
+                <button onclick="shareWhatsApp()" title="Enviar por WhatsApp" class="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 transition-all active:scale-95">
                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
                     <span>WhatsApp</span>
                 </button>
-                <button onclick="exportData()" title="Descargar copia de seguridad" class="flex items-center gap-1 text-xs font-medium px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-indigo-400 hover:bg-slate-800/80 transition-all">
-                    <span>Exportar</span>
+                <button onclick="exportData()" title="Exportar JSON" class="text-xs font-medium px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-indigo-600 dark:text-indigo-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all">
+                    Exportar
                 </button>
-                <label title="Cargar copia" class="flex items-center gap-1 text-xs font-medium px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-emerald-400 hover:bg-slate-800/80 cursor-pointer transition-all">
-                    <span>Importar</span>
-                    <input type="file" id="import-file" accept=".json" class="hidden" onchange="importData(event)">
+                <label title="Importar JSON" class="text-xs font-medium px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-emerald-600 dark:text-emerald-400 hover:bg-slate-200 dark:hover:bg-slate-800 cursor-pointer transition-all">
+                    Importar
+                    <input type="file" accept=".json" class="hidden" onchange="importData(event)">
                 </label>
+                <!-- Botón Tema escritorio -->
+                <button onclick="toggleTheme()" class="hidden sm:flex p-2 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300" title="Cambiar tema">
+                    <svg id="theme-icon-desktop" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                </button>
             </div>
         </div>
     </header>
 
+    <!-- MAIN CONTENT -->
     <main class="max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 flex-grow">
         
-        <section class="bg-gradient-to-b from-slate-900/80 to-slate-900/40 border border-slate-800/80 rounded-2xl p-5 shadow-2xl backdrop-blur-md mb-6 relative overflow-hidden">
-            <div class="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-indigo-500/5 rounded-full blur-2xl pointer-events-none"></div>
-            
+        <!-- FORMULARIO -->
+        <section class="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xl mb-6 relative overflow-hidden transition-colors">
             <div class="flex justify-between items-center mb-3">
-                <h2 id="form-title" class="text-xs font-semibold uppercase tracking-wider text-indigo-400 flex items-center gap-2">
+                <h2 id="form-title" class="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     Registrar Nuevo Defecto / Dirección
                 </h2>
-                <button type="button" id="cancel-edit-btn" onclick="resetForm()" class="hidden text-xs text-slate-400 hover:text-white bg-slate-800 px-2.5 py-1 rounded-lg transition-colors">Cancelar edición</button>
+                <button type="button" id="cancel-edit-btn" onclick="resetForm()" class="hidden text-xs text-slate-500 hover:text-slate-800 dark:hover:text-white bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg transition-colors">Cancelar edición</button>
             </div>
             
             <form id="job-form" class="grid grid-cols-1 md:grid-cols-12 gap-3.5">
                 <input type="hidden" id="edit-id" value="">
 
-                <div class="md:col-span-4">
-                    <label for="address-input" class="block text-[11px] font-medium text-slate-400 mb-1">Dirección</label>
+                <div class="md:col-span-3">
+                    <label for="address-input" class="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">Dirección *</label>
                     <input type="text" id="address-input" required placeholder="Ej. Calle Principal 12" 
-                        class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                        class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                 </div>
 
                 <div class="md:col-span-3">
-                    <label for="status-input" class="block text-[11px] font-medium text-slate-400 mb-1">Estado</label>
-                    <select id="status-input" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all cursor-pointer">
+                    <label for="status-input" class="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">Estado</label>
+                    <select id="status-input" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all cursor-pointer">
                         <option value="Terminados">Trabajos terminados</option>
                         <option value="Realizado por técnicos Elevia">Realizado por técnicos Elevia</option>
                         <option value="Entregado a autónomo">Entregado a autónomo</option>
@@ -97,19 +116,25 @@
                 </div>
 
                 <div class="md:col-span-2">
-                    <label for="expiry-input" class="block text-[11px] font-medium text-slate-400 mb-1">Caducidad</label>
-                    <input type="date" id="expiry-input" 
-                        class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                    <label for="technician-input" class="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">Técnico / Responsable</label>
+                    <input type="text" id="technician-input" placeholder="Ej. Juan / Autónomo X" 
+                        class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                 </div>
 
                 <div class="md:col-span-2">
-                    <label for="notes-input" class="block text-[11px] font-medium text-slate-400 mb-1">Notas</label>
+                    <label for="expiry-input" class="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">Caducidad</label>
+                    <input type="date" id="expiry-input" 
+                        class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                </div>
+
+                <div class="md:col-span-1">
+                    <label for="notes-input" class="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">Nota / Historial</label>
                     <input type="text" id="notes-input" placeholder="Ej. Falta acta" 
-                        class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                        class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                 </div>
 
                 <div class="md:col-span-1 flex items-end">
-                    <button type="submit" id="submit-btn" title="Añadir registro"
+                    <button type="submit" id="submit-btn" title="Guardar registro"
                         class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-medium py-2.5 rounded-xl text-sm shadow-lg shadow-indigo-600/35 transition-all active:scale-95 flex items-center justify-center">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
                     </button>
@@ -117,69 +142,113 @@
             </form>
         </section>
 
-        <section id="pdf-content-area" class="bg-slate-900/40 border border-slate-800/80 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md">
+        <!-- FILTROS RÁPIDOS Y BUSCADOR -->
+        <div id="pdf-content-area" class="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl transition-colors">
             
-            <div class="px-5 py-4 border-b border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-3 bg-slate-900/60">
-                <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-300">Listado de Defectos OCA</h3>
+            <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex flex-col lg:flex-row justify-between items-center gap-3 bg-slate-50/50 dark:bg-slate-900/60">
                 
-                <div class="flex items-center gap-3 w-full sm:w-auto">
-                    <div class="relative w-full sm:w-64 no-print">
+                <!-- Pestañas de Filtro Rápido -->
+                <div class="flex items-center gap-1.5 overflow-x-auto w-full lg:w-auto pb-1 lg:pb-0 no-print">
+                    <button onclick="setFilter('todos')" id="filter-btn-todos" class="filter-tab px-3 py-1.5 rounded-xl text-xs font-medium bg-indigo-600 text-white transition-all whitespace-nowrap">Todos</button>
+                    <button onclick="setFilter('Sin terminar')" id="filter-btn-Sin terminar" class="filter-tab px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all whitespace-nowrap">Sin terminar</button>
+                    <button onclick="setFilter('Terminados')" id="filter-btn-Terminados" class="filter-tab px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all whitespace-nowrap">Terminados</button>
+                    <button onclick="setFilter('proximos')" id="filter-btn-proximos" class="filter-tab px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all whitespace-nowrap">⚠️ Próximos/Caducados</button>
+                </div>
+                
+                <div class="flex items-center gap-3 w-full lg:w-auto">
+                    <div class="relative w-full lg:w-64 no-print">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                         </span>
-                        <input type="text" id="search-input" placeholder="Buscar dirección o notas..." 
-                            class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                        <input type="text" id="search-input" placeholder="Buscar dirección, notas..." 
+                            class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                     </div>
-                    <button onclick="clearAllJobs()" class="no-print text-xs text-rose-400 hover:text-rose-300 transition-colors font-medium whitespace-nowrap bg-rose-500/10 border border-rose-500/20 px-3 py-1.5 rounded-xl">Borrar todo</button>
+                    <button onclick="clearAllJobs()" class="no-print text-xs text-rose-600 dark:text-rose-400 hover:underline transition-colors font-medium whitespace-nowrap bg-rose-500/10 border border-rose-500/20 px-3 py-1.5 rounded-xl">Borrar todo</button>
                 </div>
             </div>
             
-            <!-- VISTA DE TABLA (Ordenadores / Pantallas grandes) -->
+            <!-- VISTA DE TABLA (Escritorio) -->
             <div class="hidden md:block overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="border-b border-slate-800 text-[11px] font-semibold text-slate-400 uppercase tracking-wider bg-slate-950/40">
+                        <tr class="border-b border-slate-200 dark:border-slate-800 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider bg-slate-100/50 dark:bg-slate-950/40">
                             <th class="py-3 px-5">Dirección</th>
                             <th class="py-3 px-5">Estado</th>
+                            <th class="py-3 px-5">Técnico</th>
                             <th class="py-3 px-5">Caducidad</th>
-                            <th class="py-3 px-5">Notas</th>
+                            <th class="py-3 px-5">Historial / Notas</th>
                             <th class="py-3 px-5 text-right no-print">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody id="job-table-body" class="divide-y divide-slate-800/60 text-sm"></tbody>
+                    <tbody id="job-table-body" class="divide-y divide-slate-200 dark:divide-slate-800/60 text-sm"></tbody>
                 </table>
             </div>
 
-            <!-- VISTA DE TARJETAS (Móviles / Táctil optimizado) -->
+            <!-- VISTA DE TARJETAS (Móviles) -->
             <div id="job-cards-container" class="md:hidden p-4 space-y-3"></div>
 
             <div id="empty-state" class="hidden py-16 text-center">
-                <svg class="w-12 h-12 mx-auto text-slate-700 mb-3" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
-                <p class="text-slate-400 font-medium text-sm">No hay registros de defectos OCA</p>
-                <p class="text-xs text-slate-600 mt-0.5">Añade una dirección arriba para empezar a gestionar</p>
+                <svg class="w-12 h-12 mx-auto text-slate-400 dark:text-slate-700 mb-3" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+                <p class="text-slate-600 dark:text-slate-400 font-medium text-sm">No hay registros que coincidan</p>
+                <p class="text-xs text-slate-400 dark:text-slate-600 mt-0.5">Prueba a cambiar el filtro o añade un nuevo aviso</p>
             </div>
-        </section>
+        </div>
     </main>
 
-    <footer class="border-t border-slate-900 py-4 text-center text-[11px] text-slate-600">
-        <p>Control de Defectos OCA • Sincronizado en tiempo real</p>
+    <footer class="border-t border-slate-200 dark:border-slate-900 py-4 text-center text-[11px] text-slate-500 dark:text-slate-600 transition-colors">
+        <p>Control de Defectos OCA Pro • Sincronización en la nube activa</p>
     </footer>
 
     <script>
-        // Configuración de Supabase
         const SUPABASE_URL = 'https://nefnltsxblfpfrifdsgy.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_ICUgIbsQd736F6tkK1FxCw_DiyJiIFk';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let cachedJobs = [];
+        let currentFilter = 'todos';
 
         const statusStyles = {
-            "Terminados": { bg: "bg-emerald-500/10", text: "text-emerald-400", border: "border-emerald-500/20", dot: "bg-emerald-400" },
-            "Realizado por técnicos Elevia": { bg: "bg-violet-500/10", text: "text-violet-400", border: "border-violet-500/20", dot: "bg-violet-400" },
-            "Entregado a autónomo": { bg: "bg-amber-500/10", text: "text-amber-400", border: "border-amber-500/20", dot: "bg-amber-400" },
-            "Sin terminar": { bg: "bg-rose-500/10", text: "text-rose-400", border: "border-rose-500/20", dot: "bg-rose-400" },
-            "Otros": { bg: "bg-sky-500/10", text: "text-sky-400", border: "border-sky-500/20", dot: "bg-sky-400" }
+            "Terminados": { bg: "bg-emerald-500/10", text: "text-emerald-600 dark:text-emerald-400", border: "border-emerald-500/20", dot: "bg-emerald-500" },
+            "Realizado por técnicos Elevia": { bg: "bg-violet-500/10", text: "text-violet-600 dark:text-violet-400", border: "border-violet-500/20", dot: "bg-violet-500" },
+            "Entregado a autónomo": { bg: "bg-amber-500/10", text: "text-amber-600 dark:text-amber-400", border: "border-amber-500/20", dot: "bg-amber-500" },
+            "Sin terminar": { bg: "bg-rose-500/10", text: "text-rose-600 dark:text-rose-400", border: "border-rose-500/20", dot: "bg-rose-500" },
+            "Otros": { bg: "bg-sky-500/10", text: "text-sky-600 dark:text-sky-400", border: "border-sky-500/20", dot: "bg-sky-500" }
         };
+
+        // Gestión de Tema Oscuro / Claro
+        function toggleTheme() {
+            const html = document.documentElement;
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        if (localStorage.getItem('theme') === 'light') {
+            document.documentElement.classList.remove('dark');
+        }
+
+        // Control de Conexión Online/Offline
+        window.addEventListener('online', updateConnectionStatus);
+        window.addEventListener('offline', updateConnectionStatus);
+
+        function updateConnectionStatus() {
+            const isOnline = navigator.onLine;
+            const statusEl = document.getElementById('connection-status');
+            const textEl = document.getElementById('connection-text');
+            if (isOnline) {
+                statusEl.className = "flex items-center gap-1.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400";
+                statusEl.querySelector('span').className = "h-2 w-2 rounded-full bg-emerald-500 animate-pulse";
+                textEl.textContent = "Online";
+            } else {
+                statusEl.className = "flex items-center gap-1.5 text-[11px] font-medium text-rose-600 dark:text-rose-400";
+                statusEl.querySelector('span').className = "h-2 w-2 rounded-full bg-rose-500";
+                textEl.textContent = "Offline";
+            }
+        }
 
         async function fetchJobs() {
             const { data, error } = await supabase
@@ -188,7 +257,7 @@
                 .order('created_at', { ascending: false });
 
             if (error) {
-                console.error('Error al cargar de Supabase:', error);
+                console.error('Error al cargar datos:', error);
                 return [];
             }
             
@@ -196,11 +265,24 @@
                 id: item.id,
                 address: item.lugar_instalacion,
                 status: item.estado || 'Sin terminar',
+                technician: item.tecnico || '',
                 expiryDate: item.fecha_inspeccion || '',
                 notes: item.observaciones || ''
             }));
             
             return cachedJobs;
+        }
+
+        function setFilter(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-tab').forEach(btn => {
+                btn.className = "filter-tab px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all whitespace-nowrap";
+            });
+            const activeBtn = document.getElementById(`filter-btn-${filter}`);
+            if (activeBtn) {
+                activeBtn.className = "filter-tab px-3 py-1.5 rounded-xl text-xs font-medium bg-indigo-600 text-white transition-all whitespace-nowrap";
+            }
+            renderJobs();
         }
 
         async function renderJobs() {
@@ -214,12 +296,26 @@
             if (tbody) tbody.innerHTML = '';
             if (cardsContainer) cardsContainer.innerHTML = '';
 
-            const filteredJobs = jobs.filter(job => 
-                job.address.toLowerCase().includes(searchTerm) || 
-                (job.notes && job.notes.toLowerCase().includes(searchTerm))
-            );
+            const todayStr = new Date().toISOString().slice(0, 10);
 
-            counterBadge.textContent = `${jobs.length} ${jobs.length === 1 ? 'registro' : 'registros'}`;
+            const filteredJobs = jobs.filter(job => {
+                const matchesSearch = job.address.toLowerCase().includes(searchTerm) || 
+                                      (job.notes && job.notes.toLowerCase().includes(searchTerm)) ||
+                                      (job.technician && job.technician.toLowerCase().includes(searchTerm));
+                
+                if (!matchesSearch) return false;
+
+                if (currentFilter === 'todos') return true;
+                if (currentFilter === 'Sin terminar') return job.status === 'Sin terminar';
+                if (currentFilter === 'Terminados') return job.status === 'Terminados';
+                if (currentFilter === 'proximos') {
+                    const isExpired = job.expiryDate && job.expiryDate < todayStr && job.status !== 'Terminados';
+                    return isExpired;
+                }
+                return true;
+            });
+
+            counterBadge.textContent = `${filteredJobs.length} de ${jobs.length} registros`;
 
             if (filteredJobs.length === 0) {
                 emptyState.classList.remove('hidden');
@@ -228,31 +324,31 @@
                 emptyState.classList.add('hidden');
             }
 
-            const todayStr = new Date().toISOString().slice(0, 10);
-
             filteredJobs.forEach((job) => {
                 const style = statusStyles[job.status] || statusStyles["Otros"];
                 
-                let expiryHtml = '<span class="text-slate-600 italic text-xs">Sin fecha</span>';
+                let expiryHtml = '<span class="text-slate-400 dark:text-slate-600 italic text-xs">Sin fecha</span>';
                 if (job.expiryDate) {
                     const isExpired = job.expiryDate < todayStr && job.status !== 'Terminados';
                     const formattedDate = job.expiryDate.split('-').reverse().join('/');
                     expiryHtml = `
-                        <span class="inline-flex items-center gap-1 text-xs ${isExpired ? 'text-rose-400 font-bold bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20' : 'text-slate-300'}">
+                        <span class="inline-flex items-center gap-1 text-xs ${isExpired ? 'text-rose-600 dark:text-rose-400 font-bold bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20' : 'text-slate-700 dark:text-slate-300'}">
                             ${isExpired ? '⚠️ ' : ''}${formattedDate}
                         </span>
                     `;
                 }
+
+                // Historial de notas formateado con fecha actual si se añade nueva nota rápida
+                let notesFormatted = job.notes ? escapeHtml(job.notes) : '<span class="text-slate-400 dark:text-slate-600 italic">Sin notas</span>';
                 
-                // 1. Render para Tabla (Escritorio)
+                // 1. Tabla (Escritorio)
                 if (tbody) {
                     const tr = document.createElement('tr');
-                    tr.className = "hover:bg-slate-900/40 transition-colors group animate-fade-in";
-                    tr.id = `job-row-${job.id}`;
+                    tr.className = "hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors group animate-fade-in";
                     tr.innerHTML = `
-                        <td class="py-3.5 px-5 font-medium text-slate-200 text-xs sm:text-sm">
+                        <td class="py-3.5 px-5 font-medium text-slate-800 dark:text-slate-200 text-xs sm:text-sm">
                             <div class="flex items-center gap-2">
-                                <button type="button" onclick="toggleDone('${job.id}')" title="Marcar como hecho" class="no-print w-4 h-4 rounded border ${job.status === 'Terminados' ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-700 bg-slate-900'} flex items-center justify-center transition-colors">
+                                <button type="button" onclick="toggleDone('${job.id}')" title="Marcar como hecho" class="no-print w-4 h-4 rounded border ${job.status === 'Terminados' ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900'} flex items-center justify-center transition-colors">
                                     ${job.status === 'Terminados' ? '✓' : ''}
                                 </button>
                                 <span>${escapeHtml(job.address)}</span>
@@ -264,13 +360,14 @@
                                 ${job.status}
                             </span>
                         </td>
+                        <td class="py-3.5 px-5 text-xs text-slate-600 dark:text-slate-400">${job.technician ? escapeHtml(job.technician) : '<span class="text-slate-400 dark:text-slate-600 italic">-</span>'}</td>
                         <td class="py-3.5 px-5">${expiryHtml}</td>
-                        <td class="py-3.5 px-5 text-slate-400 text-xs">${job.notes ? escapeHtml(job.notes) : '<span class="text-slate-600 italic">Sin notas</span>'}</td>
+                        <td class="py-3.5 px-5 text-slate-600 dark:text-slate-400 text-xs max-w-xs truncate">${notesFormatted}</td>
                         <td class="py-3.5 px-5 text-right space-x-1 no-print">
-                            <button type="button" onclick="editJob('${job.id}')" class="text-slate-500 hover:text-indigo-400 transition-colors p-1.5 rounded-lg hover:bg-indigo-500/10" title="Editar">
+                            <button type="button" onclick="editJob('${job.id}')" class="text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors p-1.5 rounded-lg hover:bg-indigo-500/10" title="Editar">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                             </button>
-                            <button type="button" onclick="deleteJob('${job.id}')" class="text-slate-500 hover:text-rose-400 transition-colors p-1.5 rounded-lg hover:bg-rose-500/10" title="Eliminar">
+                            <button type="button" onclick="deleteJob('${job.id}')" class="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors p-1.5 rounded-lg hover:bg-rose-500/10" title="Eliminar">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                             </button>
                         </td>
@@ -278,72 +375,47 @@
                     tbody.appendChild(tr);
                 }
 
-                // 2. Render para Tarjetas (Móviles)
+                // 2. Tarjetas (Móviles)
                 if (cardsContainer) {
                     const card = document.createElement('div');
-                    card.className = "bg-slate-950/60 border border-slate-800/80 rounded-xl p-3.5 space-y-2.5 animate-fade-in";
-                    card.id = `job-card-${job.id}`;
+                    card.className = "bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 rounded-xl p-3.5 space-y-2.5 animate-fade-in";
                     card.innerHTML = `
                         <div class="flex items-start justify-between gap-2">
                             <div class="flex items-center gap-2">
-                                <button type="button" onclick="toggleDone('${job.id}')" title="Marcar como hecho" class="no-print w-5 h-5 rounded border ${job.status === 'Terminados' ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-700 bg-slate-900'} flex items-center justify-center transition-colors">
+                                <button type="button" onclick="toggleDone('${job.id}')" title="Marcar como hecho" class="no-print w-5 h-5 rounded border ${job.status === 'Terminados' ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900'} flex items-center justify-center transition-colors">
                                     ${job.status === 'Terminados' ? '✓' : ''}
                                 </button>
-                                <span class="font-medium text-sm text-slate-200">${escapeHtml(job.address)}</span>
+                                <span class="font-medium text-sm text-slate-800 dark:text-slate-200">${escapeHtml(job.address)}</span>
                             </div>
                             <div class="flex items-center gap-1 no-print">
-                                <button type="button" onclick="editJob('${job.id}')" class="text-slate-400 hover:text-indigo-400 p-1">
+                                <button type="button" onclick="editJob('${job.id}')" class="text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 p-1">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                 </button>
-                                <button type="button" onclick="deleteJob('${job.id}')" class="text-slate-400 hover:text-rose-400 p-1">
+                                <button type="button" onclick="deleteJob('${job.id}')" class="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 p-1">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                 </button>
                             </div>
                         </div>
-                        <div class="flex flex-wrap items-center justify-between gap-2 text-xs pt-1 border-t border-slate-900">
+                        <div class="flex flex-wrap items-center justify-between gap-2 text-xs pt-1 border-t border-slate-200 dark:border-slate-900">
                             <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium border ${style.bg} ${style.text} ${style.border}">
                                 <span class="h-1.5 w-1.5 rounded-full ${style.dot}"></span>
                                 ${job.status}
                             </span>
+                            ${job.technician ? `<span class="text-slate-500 dark:text-slate-400">👤 ${escapeHtml(job.technician)}</span>` : ''}
                             <div>${expiryHtml}</div>
                         </div>
-                        ${job.notes ? `<div class="text-xs text-slate-400 bg-slate-900/50 p-2 rounded-lg">💬 ${escapeHtml(job.notes)}</div>` : ''}
+                        ${job.notes ? `<div class="text-xs text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900/50 p-2 rounded-lg border border-slate-200 dark:border-slate-800">💬 ${notesFormatted}</div>` : ''}
                     `;
                     cardsContainer.appendChild(card);
                 }
             });
         }
 
-        function downloadPDF() {
-            const element = document.getElementById('pdf-content-area');
-            const noPrintElements = document.querySelectorAll('.no-print');
-            noPrintElements.forEach(el => el.style.display = 'none');
-
-            const options = {
-                margin:       10,
-                filename:     `Listado-Defectos-OCA-${new Date().toISOString().slice(0, 10)}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#020617' },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
-            };
-
-            html2pdf().from(element).set(options).save().then(() => {
-                noPrintElements.forEach(el => el.style.display = '');
-            });
-        }
-
         async function toggleDone(id) {
             const job = cachedJobs.find(j => j.id === id);
             if (!job) return;
-
             const newStatus = job.status === 'Terminados' ? 'Sin terminar' : 'Terminados';
-
-            const { error } = await supabase
-                .from('ocas_inspecciones')
-                .update({ estado: newStatus })
-                .eq('id', id);
-
-            if (error) console.error('Error al actualizar estado:', error);
+            await supabase.from('ocas_inspecciones').update({ estado: newStatus }).eq('id', id);
         }
 
         function editJob(id) {
@@ -353,6 +425,7 @@
             document.getElementById('edit-id').value = job.id;
             document.getElementById('address-input').value = job.address;
             document.getElementById('status-input').value = job.status;
+            document.getElementById('technician-input').value = job.technician || '';
             document.getElementById('expiry-input').value = job.expiryDate || '';
             document.getElementById('notes-input').value = job.notes || '';
 
@@ -378,9 +451,27 @@
             document.getElementById('submit-btn').innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>`;
         }
 
+        function downloadPDF() {
+            const element = document.getElementById('pdf-content-area');
+            const noPrintElements = document.querySelectorAll('.no-print');
+            noPrintElements.forEach(el => el.style.display = 'none');
+
+            const options = {
+                margin:       10,
+                filename:     `Listado-Defectos-OCA-${new Date().toISOString().slice(0, 10)}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, backgroundColor: document.documentElement.classList.contains('dark') ? '#020617' : '#ffffff' },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+
+            html2pdf().from(element).set(options).save().then(() => {
+                noPrintElements.forEach(el => el.style.display = '');
+            });
+        }
+
         function shareWhatsApp() {
             if (cachedJobs.length === 0) {
-                alert('No hay registros para enviar por WhatsApp.');
+                alert('No hay registros para enviar.');
                 return;
             }
 
@@ -389,26 +480,25 @@
                 let expiry = job.expiryDate ? job.expiryDate.split('-').reverse().join('/') : 'Sin fecha';
                 text += `*${index + 1}. ${job.address}*\n`;
                 text += `• Estado: ${job.status}\n`;
+                if (job.technician) text += `• Técnico: ${job.technician}\n`;
                 text += `• Caducidad: ${expiry}\n`;
                 if (job.notes) text += `• Notas: ${job.notes}\n`;
                 text += `---------------------------\n`;
             });
 
-            const encodedText = encodeURIComponent(text);
-            window.open(`https://api.whatsapp.com/send?text=${encodedText}`, '_blank');
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
         }
 
         function exportData() {
             if (cachedJobs.length === 0) {
-                alert('No hay datos para exportar.');
+                alert('No hay datos.');
                 return;
             }
-            const dataStr = JSON.stringify(cachedJobs, null, 2);
-            const blob = new Blob([dataStr], { type: 'application/json' });
+            const blob = new Blob([JSON.stringify(cachedJobs, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `copia-seguridad-oca-${new Date().toISOString().slice(0, 10)}.json`;
+            a.download = `backup-oca-${new Date().toISOString().slice(0, 10)}.json`;
             a.click();
             URL.revokeObjectURL(url);
         }
@@ -420,24 +510,23 @@
             const reader = new FileReader();
             reader.onload = async function(e) {
                 try {
-                    const importedData = JSON.parse(e.target.result);
-                    if (Array.isArray(importedData)) {
-                        if (confirm(`¿Estás seguro de importar estos datos a Supabase? Se añadirán a la base de datos.`)) {
-                            for (const item of importedData) {
+                    const imported = JSON.parse(e.target.result);
+                    if (Array.isArray(imported)) {
+                        if (confirm(`¿Importar estos datos a Supabase?`)) {
+                            for (const item of imported) {
                                 await supabase.from('ocas_inspecciones').insert([{
                                     lugar_instalacion: item.address || item.lugar_instalacion,
-                                    estado: item.status || item.estado || 'Sin terminar',
+                                    estado: item.status || 'Sin terminar',
+                                    tecnico: item.technician || item.tecnico || '',
                                     fecha_inspeccion: item.expiryDate || item.fecha_inspeccion || null,
                                     observaciones: item.notes || item.observaciones || ''
                                 }]);
                             }
-                            alert('¡Datos importados con éxito!');
+                            alert('¡Importación completada!');
                         }
-                    } else {
-                        alert('El archivo no tiene el formato correcto.');
                     }
                 } catch (err) {
-                    alert('Error al leer el archivo JSON.');
+                    alert('Error al procesar el archivo JSON.');
                 }
             };
             reader.readAsText(file);
@@ -447,48 +536,35 @@
         document.getElementById('job-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             const editId = document.getElementById('edit-id').value;
-            const addressInput = document.getElementById('address-input');
-            const statusInput = document.getElementById('status-input');
-            const expiryInput = document.getElementById('expiry-input');
-            const notesInput = document.getElementById('notes-input');
-
+            
             const jobData = {
-                lugar_instalacion: addressInput.value.trim(),
-                estado: statusInput.value,
-                fecha_inspeccion: expiryInput.value || null,
-                observaciones: notesInput.value.trim()
+                lugar_instalacion: document.getElementById('address-input').value.trim(),
+                estado: document.getElementById('status-input').value,
+                tecnico: document.getElementById('technician-input').value.trim(),
+                fecha_inspeccion: document.getElementById('expiry-input').value || null,
+                observaciones: document.getElementById('notes-input').value.trim()
             };
 
             if (editId) {
-                const { error } = await supabase
-                    .from('ocas_inspecciones')
-                    .update(jobData)
-                    .eq('id', editId);
-                
-                if (error) console.error('Error al actualizar:', error);
+                await supabase.from('ocas_inspecciones').update(jobData).eq('id', editId);
             } else {
-                const { error } = await supabase
-                    .from('ocas_inspecciones')
-                    .insert([jobData]);
-                
-                if (error) console.error('Error al insertar:', error);
+                await supabase.from('ocas_inspecciones').insert([jobData]);
             }
 
             resetForm();
         });
 
-        document.getElementById('search-input').addEventListener('input', function() {
-            renderJobs();
-        });
+        document.getElementById('search-input').addEventListener('input', () => renderJobs());
 
         async function deleteJob(id) {
-            await supabase.from('ocas_inspecciones').delete().eq('id', id);
+            if (confirm('¿Eliminar este registro?')) {
+                await supabase.from('ocas_inspecciones').delete().eq('id', id);
+            }
         }
 
         async function clearAllJobs() {
-            if (confirm('¿Estás seguro de que deseas eliminar TODOS los registros de defectos OCA de Supabase?')) {
-                const { error } = await supabase.from('ocas_inspecciones').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-                if (error) console.error('Error al borrar todo:', error);
+            if (confirm('¿Estás seguro de vaciar todos los registros?')) {
+                await supabase.from('ocas_inspecciones').delete().neq('id', '00000000-0000-0000-0000-000000000000');
             }
         }
 
@@ -498,8 +574,9 @@
             return text.toString().replace(/[&<>"']/g, m => map[m]);
         }
 
-        // Inicialización y escucha en tiempo real (WebSockets de Supabase)
+        // Inicialización y canales en tiempo real de Supabase
         document.addEventListener('DOMContentLoaded', () => {
+            updateConnectionStatus();
             renderJobs();
 
             supabase
