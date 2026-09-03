@@ -3,320 +3,238 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HUD Control - Gestión de Guardias</title>
-    <!-- Tailwind CSS -->
+    <title>Control de Revisiones OCA</title>
+    <!-- Tailwind CSS para un diseño limpio y moderno -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Supabase SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- FontAwesome para iconos -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts: Inter & JetBrains Mono -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'monospace'],
-                    },
-                    colors: {
-                        hud: {
-                            dark: '#0b0f19',
-                            card: '#131c2e',
-                            border: '#1e293b',
-                            cyan: '#06b6d4',
-                            accent: '#3b82f6',
-                            glow: 'rgba(6, 182, 212, 0.15)'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        body {
-            background-color: #0b0f19;
-            color: #f8fafc;
-        }
-        .hud-panel {
-            background: rgba(19, 28, 46, 0.7);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(30, 41, 59, 0.8);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-        }
-        .hud-glow {
-            box-shadow: 0 0 20px rgba(6, 182, 212, 0.15);
-        }
-    </style>
 </head>
-<body class="min-h-screen flex flex-col font-sans antialiased selection:bg-cyan-500 selection:text-white">
+<body class="bg-slate-100 text-slate-800 min-h-screen p-4 sm:p-6">
 
-    <!-- Top Navigation / Header HUD -->
-    <header class="border-b border-hud-border bg-hud-dark/80 backdrop-blur-md sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
-                    <i class="fa-solid fa-shield-halved text-xl"></i>
-                </div>
-                <div>
-                    <h1 class="font-mono font-bold text-lg tracking-wider text-white">HUD // <span class="text-cyan-400">GUARD_SYSTEM</span></h1>
-                    <p class="text-xs text-slate-400 font-mono">ESTADO: <span id="sync-status" class="text-amber-400">Sincronizando...</span></p>
-                </div>
-            </div>
-            <div class="flex items-center space-x-3">
-                <button onclick="exportToPDF()" class="px-3 py-2 rounded-lg bg-hud-border hover:bg-slate-700 text-sm font-medium transition text-slate-200 flex items-center space-x-2">
-                    <i class="fa-solid fa-file-pdf text-rose-400"></i>
-                    <span class="hidden sm:inline">Exportar PDF</span>
-                </button>
-                <button onclick="shareWhatsApp()" class="px-3 py-2 rounded-lg bg-emerald-600/20 border border-emerald-500/30 hover:bg-emerald-600/30 text-sm font-medium transition text-emerald-300 flex items-center space-x-2">
-                    <i class="fa-brands fa-whatsapp"></i>
-                    <span class="hidden sm:inline">WhatsApp</span>
-                </button>
-            </div>
-        </div>
-    </header>
+    <div class="max-w-5xl mx-auto">
+        <!-- Cabecera -->
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl font-bold text-slate-900">Gestión de Inspecciones OCA</h1>
+            <p class="text-slate-600 text-sm mt-1">Control de direcciones, responsables y plazos de caducidad</p>
+        </header>
 
-    <!-- Main Content Grid -->
-    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-        
-        <!-- Active Guard Banner -->
-        <section class="hud-panel rounded-2xl p-6 relative overflow-hidden hud-glow">
-            <div class="absolute -right-10 -top-10 w-40 h-40 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <span class="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-medium bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 mb-2">
-                        <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
-                        <span>GUARDIA ACTIVA HOY</span>
-                    </span>
-                    <h2 id="active-guard-name" class="text-2xl sm:text-3xl font-bold tracking-tight text-white font-mono">Cargando operador...</h2>
-                    <p id="active-guard-date" class="text-sm text-slate-400 mt-1 font-mono">--</p>
-                </div>
-                <div class="flex items-center space-x-3">
-                    <button onclick="openGeneratorModal()" class="px-4 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-hud-dark font-semibold text-sm transition shadow-lg shadow-cyan-500/20 flex items-center space-x-2">
-                        <i class="fa-solid fa-calculator"></i>
-                        <span>Generar Cuadrante Anual</span>
-                    </button>
-                </div>
-            </div>
-        </section>
-
-        <!-- Dashboard Split -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
-            <!-- Panel izquierdo: Calendario / Cuadrante -->
-            <div class="lg:col-span-2 hud-panel rounded-2xl p-6">
-                <div class="flex items-center justify-between mb-6">
-                    <h3 class="font-mono font-semibold text-white flex items-center space-x-2">
-                        <i class="fa-solid fa-calendar-days text-cyan-400"></i>
-                        <span>CUADRANTE DE SERVICIO</span>
-                    </h3>
-                    <div class="flex items-center space-x-2">
-                        <button onclick="changeMonth(-1)" class="p-2 rounded-lg bg-hud-border hover:bg-slate-700 text-slate-300 transition">
-                            <i class="fa-solid fa-chevron-left text-xs"></i>
-                        </button>
-                        <span id="current-month-label" class="font-mono text-sm font-medium text-cyan-300 min-w-[120px] text-center">--</span>
-                        <button onclick="changeMonth(1)" class="p-2 rounded-lg bg-hud-border hover:bg-slate-700 text-slate-300 transition">
-                            <i class="fa-solid fa-chevron-right text-xs"></i>
-                        </button>
+            <!-- Formulario de Registro -->
+            <div class="bg-white p-6 rounded-xl shadow-md lg:col-span-1 h-fit">
+                <h2 class="text-xl font-semibold mb-4 text-slate-700 border-b pb-2">Nueva Inspección</h2>
+                <form id="ocaForm" class="space-y-4">
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Dirección / Instalación</label>
+                        <input type="text" id="direccion" required 
+                            class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Ej. Calle Mayor 12, Valencia">
                     </div>
-                </div>
 
-                <!-- Grid de días -->
-                <div class="grid grid-cols-7 gap-2 text-center font-mono text-xs text-slate-400 mb-2">
-                    <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
-                </div>
-                <div id="calendar-grid" class="grid grid-cols-7 gap-2">
-                    <!-- Los días se inyectan mediante JS -->
-                </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Realizado por</label>
+                        <select id="realizadoPor" required
+                            class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">Selecciona un responsable...</option>
+                            <option value="Autónomo">Autónomo</option>
+                            <option value="Técnico de empresa">Técnico de empresa</option>
+                            <option value="Servicio Oficial / Organismo">Servicio Oficial / Organismo</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Fecha de Realización</label>
+                        <input type="date" id="fechaRealizacion" required 
+                            class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Fecha de Caducidad</label>
+                        <input type="date" id="fechaCaducidad" required 
+                            class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Observaciones / Notas</label>
+                        <textarea id="observaciones" rows="2" 
+                            class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Detalles adicionales, defectos leves..."></textarea>
+                    </div>
+
+                    <button type="submit" 
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition-colors shadow">
+                        Guardar Registro
+                    </button>
+                </form>
             </div>
 
-            <!-- Panel derecho: Personal y Tarifas -->
-            <div class="space-y-6">
-                <!-- Personal Operativo -->
-                <div class="hud-panel rounded-2xl p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="font-mono font-semibold text-white text-sm flex items-center space-x-2">
-                            <i class="fa-solid fa-users text-cyan-400"></i>
-                            <span>OPERADORES</span>
-                        </h3>
-                        <button onclick="addOperatorPrompt()" class="text-xs text-cyan-400 hover:text-cyan-300 font-mono">
-                            <i class="fa-solid fa-plus"></i> Añadir
+            <!-- Listado y Filtros -->
+            <div class="bg-white p-6 rounded-xl shadow-md lg:col-span-2">
+                <div class="flex flex-col sm:flex-row justify-between items-center mb-4 gap-3 border-b pb-2">
+                    <h2 class="text-xl font-semibold text-slate-700">Listado de Registros</h2>
+                    <div class="flex gap-2 w-full sm:w-auto">
+                        <input type="text" id="buscador" placeholder="Buscar dirección..." 
+                            class="px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-48">
+                        <button onclick="exportarCSV()" 
+                            class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">
+                            Exportar CSV
                         </button>
-                    </div>
-                    <div id="operators-list" class="space-y-2 max-h-60 overflow-y-auto pr-1">
-                        <!-- Lista de operadores cargada dinámicamente -->
                     </div>
                 </div>
 
-                <!-- Resumen y Configuración Rápida -->
-                <div class="hud-panel rounded-2xl p-6">
-                    <h3 class="font-mono font-semibold text-white text-sm mb-3 flex items-center space-x-2">
-                        <i class="fa-solid fa-sliders text-cyan-400"></i>
-                        <span>CONFIGURACIÓN Y TARIFAS</span>
-                    </h3>
-                    <div class="space-y-3 text-sm text-slate-300 font-mono">
-                        <div class="flex justify-between items-center p-2 rounded-lg bg-hud-dark/50 border border-hud-border">
-                            <span class="text-xs text-slate-400">Tarifa Festivo</span>
-                            <span id="rate-holiday" class="text-cyan-400 font-bold">180€</span>
-                        </div>
-                        <div class="flex justify-between items-center p-2 rounded-lg bg-hud-dark/50 border border-hud-border">
-                            <span class="text-xs text-slate-400">Tarifa Ordinaria</span>
-                            <span id="rate-normal" class="text-cyan-400 font-bold">120€</span>
-                        </div>
-                    </div>
+                <!-- Tabla de datos -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider border-b">
+                                <th class="p-3">Dirección / Responsable</th>
+                                <th class="p-3">Fechas</th>
+                                <th class="p-3">Estado</th>
+                                <th class="p-3 text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaOcas" class="divide-y divide-slate-200 text-sm">
+                            <!-- Los registros se cargan dinámicamente aquí -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="sinRegistros" class="text-center py-8 text-slate-400 hidden">
+                    No hay registros guardados actualmente.
                 </div>
             </div>
 
         </div>
+    </div>
 
-    </main>
-
-    <!-- Script Principal de Lógica y Supabase -->
+    <!-- Lógica de la Aplicación -->
     <script>
-        // ==========================================
-        // CONFIGURACIÓN SUPABASE (Sustituir credenciales)
-        // ==========================================
-        const SUPABASE_URL = 'TU_SUPABASE_URL';
-        const SUPABASE_ANON_KEY = 'TU_SUPABASE_ANON_KEY';
-        
-        let supabaseClient = null;
-        try {
-            if (SUPABASE_URL !== 'TU_SUPABASE_URL') {
-                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                document.getElementById('sync-status').textContent = 'Sincronizado';
-                document.getElementById('sync-status').className = 'text-emerald-400';
-            } else {
-                document.getElementById('sync-status').textContent = 'Modo Local / Sin Conexión';
-                document.getElementById('sync-status').className = 'text-amber-400';
-            }
-        } catch (e) {
-            console.error('Error inicializando Supabase:', e);
-        }
+        let registros = JSON.parse(localStorage.getItem('registros_oca')) || [];
 
-        // Estado Global de la App
-        let currentDate = new Date();
-        let operators = [
-            { id: 1, name: 'Operador 1' },
-            { id: 2, name: 'Operador 2' },
-            { id: 3, name: 'Operador 3' }
-        ];
-        let guards = {}; // Formato 'YYYY-MM-DD': operatorId
+        const form = document.getElementById('ocaForm');
+        const tablaOcas = document.getElementById('tablaOcas');
+        const sinRegistros = document.getElementById('sinRegistros');
+        const buscador = document.getElementById('buscador');
 
-        // Inicialización
-        document.addEventListener('DOMContentLoaded', () => {
-            renderCalendar();
-            updateActiveGuardBanner();
-            renderOperators();
+        // Autocompletar fecha de realización con el día de hoy por comodidad
+        document.getElementById('fechaRealizacion').valueAsDate = new Date();
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const nuevoRegistro = {
+                id: Date.now(),
+                direccion: document.getElementById('direccion').value,
+                realizadoPor: document.getElementById('realizadoPor').value,
+                fechaRealizacion: document.getElementById('fechaRealizacion').value,
+                fechaCaducidad: document.getElementById('fechaCaducidad').value,
+                observaciones: document.getElementById('observaciones').value
+            };
+
+            registros.push(nuevoRegistro);
+            guardarYRenderizar();
+            form.reset();
+            document.getElementById('fechaRealizacion').valueAsDate = new Date();
         });
 
-        // Renderizado del Calendario
-        function renderCalendar() {
-            const grid = document.getElementById('calendar-grid');
-            grid.innerHTML = '';
+        function guardarYRenderizar() {
+            localStorage.setItem('registros_oca', JSON.stringify(registros));
+            renderizarTabla(registros);
+        }
 
-            const year = currentDate.getFullYear();
-            const month = currentDate.getMonth();
+        function calcularEstado(fechaCaducidadStr) {
+            const hoy = new Date();
+            hoy.setHours(0,0,0,0);
+            const caducidad = new Date(fechaCaducidadStr);
+            caducidad.setHours(0,0,0,0);
 
-            const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-            document.getElementById('current-month-label').textContent = `${monthNames[month]} ${year}`;
+            const diferenciaDias = Math.ceil((caducidad - hoy) / (1000 * 60 * 60 * 24));
 
-            // Primer día del mes
-            const firstDayIndex = (new Date(year, month, 1).getDay() + 6) % 7; // Ajuste lunes=0
-            const totalDays = new Date(year, month + 1, 0).getDate();
-
-            // Espacios vacíos previos
-            for (let i = 0; i < firstDayIndex; i++) {
-                const emptyCell = document.createElement('div');
-                grid.appendChild(emptyCell);
-            }
-
-            // Días del mes
-            for (let day = 1; day <= totalDays; day++) {
-                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                const cell = document.createElement('div');
-                cell.className = 'aspect-square rounded-xl bg-hud-dark/40 border border-hud-border p-1 flex flex-col justify-between items-center transition hover:border-cyan-500/50 cursor-pointer';
-                
-                const assignedOpId = guards[dateStr];
-                const op = operators.find(o => o.id === assignedOpId);
-
-                cell.innerHTML = `
-                    <span class="font-mono text-xs text-slate-400">${day}</span>
-                    <span class="font-mono text-[10px] text-cyan-300 font-semibold text-center truncate w-full px-1">${op ? op.name.split(' ')[0] : ''}</span>
-                    <div class="w-1.5 h-1.5 rounded-full ${op ? 'bg-cyan-400' : 'bg-transparent'}"></div>
-                `;
-
-                cell.onclick = () => assignGuardPrompt(dateStr);
-                grid.appendChild(cell);
+            if (diferenciaDias < 0) {
+                return { texto: 'Caducado', clase: 'bg-red-100 text-red-700 border-red-200' };
+            } else if (diferenciaDias <= 30) {
+                return { texto: `Próximo (${diferenciaDias} días)`, clase: 'bg-amber-100 text-amber-700 border-amber-200' };
+            } else {
+                return { texto: 'Vigente', clase: 'bg-emerald-100 text-emerald-700 border-emerald-200' };
             }
         }
 
-        function changeMonth(direction) {
-            currentDate.setMonth(currentDate.getMonth() + direction);
-            renderCalendar();
-        }
+        function renderizarTabla(datos) {
+            tablaOcas.innerHTML = '';
 
-        function renderOperators() {
-            const list = document.getElementById('operators-list');
-            list.innerHTML = '';
-            operators.forEach(op => {
-                const div = document.createElement('div');
-                div.className = 'flex items-center justify-between p-2 rounded-lg bg-hud-dark/40 border border-hud-border text-sm font-mono';
-                div.innerHTML = `
-                    <span class="text-slate-200">${op.name}</span>
-                    <span class="text-xs text-slate-500">ID: ${op.id}</span>
+            if (datos.length === 0) {
+                sinRegistros.classList.remove('hidden');
+                return;
+            } else {
+                sinRegistros.classList.add('hidden');
+            }
+
+            datos.forEach(reg => {
+                const estado = calcularEstado(reg.fechaCaducidad);
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition-colors";
+
+                tr.innerHTML = `
+                    <td class="p-3">
+                        <div class="font-semibold text-slate-800">${reg.direccion}</div>
+                        <div class="text-xs text-slate-500">Por: <span class="font-medium text-slate-600">${reg.realizadoPor}</span></div>
+                        ${reg.observaciones ? `<div class="text-xs text-slate-400 mt-1 italic">"${reg.observaciones}"</div>` : ''}
+                    </td>
+                    <td class="p-3 text-xs text-slate-600">
+                        <div><span class="font-medium">Realizada:</span> ${reg.fechaRealizacion}</div>
+                        <div><span class="font-medium">Caduca:</span> ${reg.fechaCaducidad}</div>
+                    </td>
+                    <td class="p-3">
+                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full border ${estado.clase}">
+                            ${estado.texto}
+                        </span>
+                    </td>
+                    <td class="p-3 text-center">
+                        <button onclick="eliminarRegistro(${reg.id})" class="text-slate-400 hover:text-red-600 p-1 transition-colors" title="Eliminar">
+                            🗑️
+                        </button>
+                    </td>
                 `;
-                list.appendChild(div);
+                tablaOcas.appendChild(tr);
             });
         }
 
-        function updateActiveGuardBanner() {
-            const todayStr = new Date().toISOString().split('T')[0];
-            const activeOpId = guards[todayStr];
-            const op = operators.find(o => o.id === activeOpId);
-
-            document.getElementById('active-guard-name').textContent = op ? op.name : 'Sin operador asignado hoy';
-            document.getElementById('active-guard-date').textContent = new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        }
-
-        function assignGuardPrompt(dateStr) {
-            const opName = prompt(`Asignar guardia para el día ${dateStr}. Introduce el ID del operador (${operators.map(o => `${o.id}: ${o.name}`).join(', ')}):`);
-            if (opName) {
-                const opId = parseInt(opName);
-                if (operators.some(o => o.id === opId)) {
-                    guards[dateStr] = opId;
-                    renderCalendar();
-                    updateActiveGuardBanner();
-                } else {
-                    alert('Operador no válido.');
-                }
+        function eliminarRegistro(id) {
+            if (confirm('¿Estás seguro de que deseas eliminar este registro?')) {
+                registros = registros.filter(r => r.id !== id);
+                guardarYRenderizar();
             }
         }
 
-        function addOperatorPrompt() {
-            const name = prompt('Nombre del nuevo operador:');
-            if (name) {
-                const newId = operators.length > 0 ? Math.max(...operators.map(o => o.id)) + 1 : 1;
-                operators.push({ id: newId, name: name });
-                renderOperators();
+        buscador.addEventListener('input', function(e) {
+            const textoBusqueda = e.target.value.toLowerCase();
+            const filtrados = registros.filter(r => 
+                r.direccion.toLowerCase().includes(textoBusqueda) || 
+                r.realizadoPor.toLowerCase().includes(textoBusqueda)
+            );
+            renderizarTabla(filtrados);
+        });
+
+        function exportarCSV() {
+            if (registros.length === 0) {
+                alert('No hay datos para exportar.');
+                return;
             }
+
+            let csvContent = "data:text/csv;charset=utf-8,Direccion,RealizadoPor,FechaRealizacion,FechaCaducidad,Observaciones\n";
+            registros.forEach(r => {
+                csvContent += `"${r.direccion}","${r.realizadoPor}","${r.fechaRealizacion}","${r.fechaCaducidad}","${r.observaciones}"\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "control_ocas.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
-        function openGeneratorModal() {
-            alert('Generador automático de cuadrante anual activado en segundo plano. (Rotación equitativa lista para procesar).');
-        }
-
-        function exportToPDF() {
-            window.print();
-        }
-
-        function shareWhatsApp() {
-            const todayStr = new Date().toISOString().split('T')[0];
-            const activeOpId = guards[todayStr];
-            const op = operators.find(o => o.id === activeOpId);
-            const msg = `*CUADRANTE DE GUARDIAS*\nFecha: ${todayStr}\nOperador de guardia: ${op ? op.name : 'Ninguno'}`;
-            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
-        }
+        // Carga inicial al abrir la página
+        renderizarTabla(registros);
     </script>
 </body>
 </html>
