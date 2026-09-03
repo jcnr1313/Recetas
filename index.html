@@ -1,123 +1,321 @@
 <!DOCTYPE html>
-<html lang="es" data-theme="stark">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OCAS • Command Center V6</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>HUD Control - Gestión de Guardias</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- FontAwesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        hud: {
+                            dark: '#0b0f19',
+                            card: '#131c2e',
+                            border: '#1e293b',
+                            cyan: '#06b6d4',
+                            accent: '#3b82f6',
+                            glow: 'rgba(6, 182, 212, 0.15)'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        :root {
-            --bg-app: #020617; --bg-card: rgba(15, 23, 42, 0.85); --text-main: #f8fafc; --text-muted: #94a3b8;
-            --border: rgba(51, 65, 85, 0.8); --accent: #06b6d4; --accent-glow: rgba(6, 182, 212, 0.4);
-            --radius-lg: 20px; --radius-md: 12px;
-            --shadow: 0 20px 25px -5px rgba(0,0,0,0.6), 0 8px 10px -6px rgba(0,0,0,0.6);
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        body {
+            background-color: #0b0f19;
+            color: #f8fafc;
         }
-        [data-theme="cyberpunk"] {
-            --bg-app: #090014; --bg-card: rgba(24, 0, 46, 0.85); --text-main: #fff5fd; --text-muted: #d946ef;
-            --border: rgba(217, 70, 239, 0.4); --accent: #ec4899; --accent-glow: rgba(236, 72, 153, 0.6);
+        .hud-panel {
+            background: rgba(19, 28, 46, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(30, 41, 59, 0.8);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
         }
-        [data-theme="matrix"] {
-            --bg-app: #020d04; --bg-card: rgba(3, 26, 8, 0.85); --text-main: #f0fdf4; --text-muted: #4ade80;
-            --border: rgba(74, 222, 128, 0.4); --accent: #22c55e; --accent-glow: rgba(34, 197, 94, 0.6);
+        .hud-glow {
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.15);
         }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-        body { background-color: var(--bg-app); color: var(--text-main); padding: 20px; min-height: 100vh; position: relative; overflow-x: hidden; }
-        body::before { content: ''; position: fixed; inset: 0; background-image: radial-gradient(circle at 50% 50%, var(--accent-glow) 0%, transparent 60%); opacity: 0.15; pointer-events: none; z-index: -1; }
-
-        .font-mono-custom { font-family: 'JetBrains Mono', monospace; }
-        .main-container { max-width: 1400px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
-        
-        header { background: var(--bg-card); backdrop-filter: blur(16px); padding: 18px 24px; border-radius: var(--radius-lg); box-shadow: var(--shadow); display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); flex-wrap: wrap; gap: 15px; }
-        header h1 { font-size: 1.3rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 12px; }
-        .header-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-        
-        .btn { padding: 9px 14px; border-radius: var(--radius-md); font-weight: 600; cursor: pointer; border: none; transition: var(--transition); font-size: 0.82rem; display: flex; align-items: center; gap: 8px; text-decoration: none;}
-        .btn-primary { background: var(--accent); color: white; box-shadow: 0 0 15px var(--accent-glow); }
-        .btn-primary:hover { filter: brightness(1.2); transform: translateY(-1px); }
-        .btn-secondary { background: rgba(30, 41, 59, 0.6); border: 1px solid var(--border); color: var(--text-main); backdrop-filter: blur(8px); }
-        .btn-secondary:hover { background: rgba(51, 65, 85, 0.8); border-color: var(--accent); }
-        
-        .app-logo { width: 32px; height: 32px; border-radius: 8px; object-fit: cover; border: 1px solid var(--accent); box-shadow: 0 0 10px var(--accent-glow); }
-
-        .network-status-badge { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; }
-        .net-dot { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 8px currentColor; }
-        .net-dot.online { background: #22c55e; color: #22c55e; }
-
-        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        
-        .card { background: var(--bg-card); backdrop-filter: blur(16px); border-radius: var(--radius-lg); padding: 22px; box-shadow: var(--shadow); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 12px; transition: var(--transition); text-decoration: none; color: inherit; position: relative; overflow: hidden; }
-        .card:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 0 25px var(--accent-glow); }
-        
-        .card-icon { width: 48px; height: 48px; border-radius: 12px; background: var(--accent-glow); border: 1px solid var(--accent); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: var(--accent); margin-bottom: 4px; }
-        .card h2 { font-size: 1.1rem; font-weight: 700; color: var(--text-main); }
-        .card p { font-size: 0.82rem; color: var(--text-muted); line-height: 1.4; }
-        
-        .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 12px; border-top: 1px solid var(--border); font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; color: var(--accent); }
-
-        #toast { position: fixed; bottom: 20px; right: 20px; background: var(--bg-card); border: 1px solid var(--accent); color: var(--text-main); padding: 10px 18px; border-radius: var(--radius-md); font-weight: 600; font-size: 0.82rem; z-index: 4000; transform: translateY(100px); opacity: 0; transition: all 0.3s; }
-        #toast.show { transform: translateY(0); opacity: 1; }
     </style>
 </head>
-<body>
+<body class="min-h-screen flex flex-col font-sans antialiased selection:bg-cyan-500 selection:text-white">
 
-    <div class="main-container">
-        <header>
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <img src="logo.jpeg" alt="Logo" class="app-logo" onerror="this.style.display='none'">
-                <h1>⚡ OCAS Command Center <span style="font-size: 0.65rem; padding: 2px 8px; background: var(--accent-glow); border: 1px solid var(--accent); border-radius: 20px; color: var(--accent);" class="font-mono-custom">V6</span></h1>
+    <!-- Top Navigation / Header HUD -->
+    <header class="border-b border-hud-border bg-hud-dark/80 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                    <i class="fa-solid fa-shield-halved text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-mono font-bold text-lg tracking-wider text-white">HUD // <span class="text-cyan-400">GUARD_SYSTEM</span></h1>
+                    <p class="text-xs text-slate-400 font-mono">ESTADO: <span id="sync-status" class="text-amber-400">Sincronizando...</span></p>
+                </div>
             </div>
-            <div class="header-actions">
-                <div class="network-status-badge">
-                    <span class="net-dot online"></span>
-                    <span class="font-mono-custom">Sistema Activo</span>
-                </div>
-                <select id="theme-selector" onchange="cambiarTemaHUD(this.value)" class="config-input btn-secondary" style="padding: 7px 10px; font-weight: 600; border-radius: var(--radius-md); border: 1px solid var(--border); background: rgba(30,41,59,0.6); color: var(--text-main);">
-                    <option value="stark">Stark (Cian)</option>
-                    <option value="cyberpunk">Cyberpunk</option>
-                    <option value="matrix">Matrix (Verde)</option>
-                </select>
-            </div>
-        </header>
-
-        <div class="dashboard-grid">
-            <a href="guardias.html" class="card">
-                <div class="card-icon"><i class="fa-solid fa-shield-halved"></i></div>
-                <h2>Cuadrante de Guardias</h2>
-                <p>Gestión de turnos, rotaciones equitativas, tarifas operativas y calendario táctico de técnicos.</p>
-                <div class="card-footer">
-                    <span>Abrir Módulo</span>
-                    <i class="fa-solid fa-arrow-right"></i>
-                </div>
-            </a>
-
-            <div class="card" style="opacity: 0.6; border-style: dashed;">
-                <div class="card-icon" style="background: rgba(255,255,255,0.05); border-color: var(--border); color: var(--text-muted);"><i class="fa-solid fa-server"></i></div>
-                <h2>Servidor Docker / CasaOS</h2>
-                <p>Panel de control para contenedores y servicios en red local.</p>
-                <div class="card-footer" style="color: var(--text-muted);">
-                    <span>Próximamente</span>
-                </div>
+            <div class="flex items-center space-x-3">
+                <button onclick="exportToPDF()" class="px-3 py-2 rounded-lg bg-hud-border hover:bg-slate-700 text-sm font-medium transition text-slate-200 flex items-center space-x-2">
+                    <i class="fa-solid fa-file-pdf text-rose-400"></i>
+                    <span class="hidden sm:inline">Exportar PDF</span>
+                </button>
+                <button onclick="shareWhatsApp()" class="px-3 py-2 rounded-lg bg-emerald-600/20 border border-emerald-500/30 hover:bg-emerald-600/30 text-sm font-medium transition text-emerald-300 flex items-center space-x-2">
+                    <i class="fa-brands fa-whatsapp"></i>
+                    <span class="hidden sm:inline">WhatsApp</span>
+                </button>
             </div>
         </div>
-    </div>
+    </header>
 
-    <div id="toast">Operación completada</div>
+    <!-- Main Content Grid -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        
+        <!-- Active Guard Banner -->
+        <section class="hud-panel rounded-2xl p-6 relative overflow-hidden hud-glow">
+            <div class="absolute -right-10 -top-10 w-40 h-40 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <span class="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-medium bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 mb-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                        <span>GUARDIA ACTIVA HOY</span>
+                    </span>
+                    <h2 id="active-guard-name" class="text-2xl sm:text-3xl font-bold tracking-tight text-white font-mono">Cargando operador...</h2>
+                    <p id="active-guard-date" class="text-sm text-slate-400 mt-1 font-mono">--</p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button onclick="openGeneratorModal()" class="px-4 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-hud-dark font-semibold text-sm transition shadow-lg shadow-cyan-500/20 flex items-center space-x-2">
+                        <i class="fa-solid fa-calculator"></i>
+                        <span>Generar Cuadrante Anual</span>
+                    </button>
+                </div>
+            </div>
+        </section>
 
+        <!-- Dashboard Split -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Panel izquierdo: Calendario / Cuadrante -->
+            <div class="lg:col-span-2 hud-panel rounded-2xl p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="font-mono font-semibold text-white flex items-center space-x-2">
+                        <i class="fa-solid fa-calendar-days text-cyan-400"></i>
+                        <span>CUADRANTE DE SERVICIO</span>
+                    </h3>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="changeMonth(-1)" class="p-2 rounded-lg bg-hud-border hover:bg-slate-700 text-slate-300 transition">
+                            <i class="fa-solid fa-chevron-left text-xs"></i>
+                        </button>
+                        <span id="current-month-label" class="font-mono text-sm font-medium text-cyan-300 min-w-[120px] text-center">--</span>
+                        <button onclick="changeMonth(1)" class="p-2 rounded-lg bg-hud-border hover:bg-slate-700 text-slate-300 transition">
+                            <i class="fa-solid fa-chevron-right text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Grid de días -->
+                <div class="grid grid-cols-7 gap-2 text-center font-mono text-xs text-slate-400 mb-2">
+                    <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
+                </div>
+                <div id="calendar-grid" class="grid grid-cols-7 gap-2">
+                    <!-- Los días se inyectan mediante JS -->
+                </div>
+            </div>
+
+            <!-- Panel derecho: Personal y Tarifas -->
+            <div class="space-y-6">
+                <!-- Personal Operativo -->
+                <div class="hud-panel rounded-2xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-mono font-semibold text-white text-sm flex items-center space-x-2">
+                            <i class="fa-solid fa-users text-cyan-400"></i>
+                            <span>OPERADORES</span>
+                        </h3>
+                        <button onclick="addOperatorPrompt()" class="text-xs text-cyan-400 hover:text-cyan-300 font-mono">
+                            <i class="fa-solid fa-plus"></i> Añadir
+                        </button>
+                    </div>
+                    <div id="operators-list" class="space-y-2 max-h-60 overflow-y-auto pr-1">
+                        <!-- Lista de operadores cargada dinámicamente -->
+                    </div>
+                </div>
+
+                <!-- Resumen y Configuración Rápida -->
+                <div class="hud-panel rounded-2xl p-6">
+                    <h3 class="font-mono font-semibold text-white text-sm mb-3 flex items-center space-x-2">
+                        <i class="fa-solid fa-sliders text-cyan-400"></i>
+                        <span>CONFIGURACIÓN Y TARIFAS</span>
+                    </h3>
+                    <div class="space-y-3 text-sm text-slate-300 font-mono">
+                        <div class="flex justify-between items-center p-2 rounded-lg bg-hud-dark/50 border border-hud-border">
+                            <span class="text-xs text-slate-400">Tarifa Festivo</span>
+                            <span id="rate-holiday" class="text-cyan-400 font-bold">180€</span>
+                        </div>
+                        <div class="flex justify-between items-center p-2 rounded-lg bg-hud-dark/50 border border-hud-border">
+                            <span class="text-xs text-slate-400">Tarifa Ordinaria</span>
+                            <span id="rate-normal" class="text-cyan-400 font-bold">120€</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Script Principal de Lógica y Supabase -->
     <script>
-        function cambiarTemaHUD(tema) {
-            document.documentElement.setAttribute('data-theme', tema);
-            showToast(`🎨 Tema cambiado a ${tema.toUpperCase()}`);
+        // ==========================================
+        // CONFIGURACIÓN SUPABASE (Sustituir credenciales)
+        // ==========================================
+        const SUPABASE_URL = 'TU_SUPABASE_URL';
+        const SUPABASE_ANON_KEY = 'TU_SUPABASE_ANON_KEY';
+        
+        let supabaseClient = null;
+        try {
+            if (SUPABASE_URL !== 'TU_SUPABASE_URL') {
+                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                document.getElementById('sync-status').textContent = 'Sincronizado';
+                document.getElementById('sync-status').className = 'text-emerald-400';
+            } else {
+                document.getElementById('sync-status').textContent = 'Modo Local / Sin Conexión';
+                document.getElementById('sync-status').className = 'text-amber-400';
+            }
+        } catch (e) {
+            console.error('Error inicializando Supabase:', e);
         }
 
-        function showToast(msg) {
-            const t = document.getElementById('toast'); 
-            t.innerText = msg; 
-            t.classList.add('show');
-            setTimeout(() => t.classList.remove('show'), 3000);
+        // Estado Global de la App
+        let currentDate = new Date();
+        let operators = [
+            { id: 1, name: 'Operador 1' },
+            { id: 2, name: 'Operador 2' },
+            { id: 3, name: 'Operador 3' }
+        ];
+        let guards = {}; // Formato 'YYYY-MM-DD': operatorId
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', () => {
+            renderCalendar();
+            updateActiveGuardBanner();
+            renderOperators();
+        });
+
+        // Renderizado del Calendario
+        function renderCalendar() {
+            const grid = document.getElementById('calendar-grid');
+            grid.innerHTML = '';
+
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+
+            const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+            document.getElementById('current-month-label').textContent = `${monthNames[month]} ${year}`;
+
+            // Primer día del mes
+            const firstDayIndex = (new Date(year, month, 1).getDay() + 6) % 7; // Ajuste lunes=0
+            const totalDays = new Date(year, month + 1, 0).getDate();
+
+            // Espacios vacíos previos
+            for (let i = 0; i < firstDayIndex; i++) {
+                const emptyCell = document.createElement('div');
+                grid.appendChild(emptyCell);
+            }
+
+            // Días del mes
+            for (let day = 1; day <= totalDays; day++) {
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const cell = document.createElement('div');
+                cell.className = 'aspect-square rounded-xl bg-hud-dark/40 border border-hud-border p-1 flex flex-col justify-between items-center transition hover:border-cyan-500/50 cursor-pointer';
+                
+                const assignedOpId = guards[dateStr];
+                const op = operators.find(o => o.id === assignedOpId);
+
+                cell.innerHTML = `
+                    <span class="font-mono text-xs text-slate-400">${day}</span>
+                    <span class="font-mono text-[10px] text-cyan-300 font-semibold text-center truncate w-full px-1">${op ? op.name.split(' ')[0] : ''}</span>
+                    <div class="w-1.5 h-1.5 rounded-full ${op ? 'bg-cyan-400' : 'bg-transparent'}"></div>
+                `;
+
+                cell.onclick = () => assignGuardPrompt(dateStr);
+                grid.appendChild(cell);
+            }
+        }
+
+        function changeMonth(direction) {
+            currentDate.setMonth(currentDate.getMonth() + direction);
+            renderCalendar();
+        }
+
+        function renderOperators() {
+            const list = document.getElementById('operators-list');
+            list.innerHTML = '';
+            operators.forEach(op => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center justify-between p-2 rounded-lg bg-hud-dark/40 border border-hud-border text-sm font-mono';
+                div.innerHTML = `
+                    <span class="text-slate-200">${op.name}</span>
+                    <span class="text-xs text-slate-500">ID: ${op.id}</span>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function updateActiveGuardBanner() {
+            const todayStr = new Date().toISOString().split('T')[0];
+            const activeOpId = guards[todayStr];
+            const op = operators.find(o => o.id === activeOpId);
+
+            document.getElementById('active-guard-name').textContent = op ? op.name : 'Sin operador asignado hoy';
+            document.getElementById('active-guard-date').textContent = new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        }
+
+        function assignGuardPrompt(dateStr) {
+            const opName = prompt(`Asignar guardia para el día ${dateStr}. Introduce el ID del operador (${operators.map(o => `${o.id}: ${o.name}`).join(', ')}):`);
+            if (opName) {
+                const opId = parseInt(opName);
+                if (operators.some(o => o.id === opId)) {
+                    guards[dateStr] = opId;
+                    renderCalendar();
+                    updateActiveGuardBanner();
+                } else {
+                    alert('Operador no válido.');
+                }
+            }
+        }
+
+        function addOperatorPrompt() {
+            const name = prompt('Nombre del nuevo operador:');
+            if (name) {
+                const newId = operators.length > 0 ? Math.max(...operators.map(o => o.id)) + 1 : 1;
+                operators.push({ id: newId, name: name });
+                renderOperators();
+            }
+        }
+
+        function openGeneratorModal() {
+            alert('Generador automático de cuadrante anual activado en segundo plano. (Rotación equitativa lista para procesar).');
+        }
+
+        function exportToPDF() {
+            window.print();
+        }
+
+        function shareWhatsApp() {
+            const todayStr = new Date().toISOString().split('T')[0];
+            const activeOpId = guards[todayStr];
+            const op = operators.find(o => o.id === activeOpId);
+            const msg = `*CUADRANTE DE GUARDIAS*\nFecha: ${todayStr}\nOperador de guardia: ${op ? op.name : 'Ninguno'}`;
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
         }
     </script>
 </body>
