@@ -201,7 +201,7 @@
 
         <!-- Footer -->
         <footer class="text-center text-xs text-slate-500 pt-2 pb-6 space-y-1">
-            <p>Control de Defectos OCA • <span id="syncStatus" class="text-emerald-400 font-medium">Sincronizado correctamente ⚡</span></p>
+            <p>Control de Defectos OCA • <span id="syncStatus" class="text-emerald-400 font-medium">Conectando con Supabase... ⚡</span></p>
             <p class="text-[11px] text-slate-600">Elevia Pro • Todos los derechos reservados</p>
         </footer>
     </div>
@@ -233,11 +233,11 @@
         </div>
     </div>
 
-    <!-- Script de Conexión y Lógica Avanzada -->
+    <!-- Script de Conexión y Lógica Supabase -->
     <script>
-        // CONFIGURACIÓN DE SUPABASE (Modo híbrido seguro con LocalStorage por defecto)
-        const SUPABASE_URL = 'https://TU-PROYECTO.supabase.co';
-        const SUPABASE_ANON_KEY = 'TU-ANON-KEY';
+        // CONFIGURACIÓN DE SUPABASE CON TUS CREDENCIALES
+        const SUPABASE_URL = 'https://nefnltsxblfpfrifdsgy.supabase.co';
+        const SUPABASE_ANON_KEY = 'Sb_publishable_ICUgIbsQd736F6tkK1FxCw_DiyJiIFk';
         
         let supabaseClient = null;
         let registrosGlobales = [];
@@ -250,17 +250,11 @@
         });
 
         function intentarConexionSupabase() {
-            // Validar si las credenciales son las de plantilla por defecto
-            if (SUPABASE_URL.includes('TU-PROYECTO') || SUPABASE_ANON_KEY.includes('TU-ANON-KEY')) {
-                activarModoLocal("Modo local activo (Funcionamiento autónomo)");
-                return;
-            }
-
             try {
                 supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 initSupabase();
             } catch (e) {
-                activarModoLocal("Modo local (Error de conexión con Supabase)");
+                activarModoLocal("Modo local (Error al iniciar Supabase)");
             }
         }
 
@@ -280,6 +274,7 @@
                 document.getElementById('syncStatus').className = "text-emerald-400 font-medium";
                 await cargarRegistrosSupabase();
 
+                // Suscripción Realtime por WebSockets
                 supabaseClient
                     .channel('public:oca_registros')
                     .on('postgres_changes', { event: '*', schema: 'public', table: 'oca_registros' }, () => {
@@ -287,7 +282,7 @@
                     })
                     .subscribe();
             } catch (err) {
-                activarModoLocal("Modo local (Supabase no accesible)");
+                activarModoLocal("Modo local (Tabla 'oca_registros' no encontrada)");
             }
         }
 
