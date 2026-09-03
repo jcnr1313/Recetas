@@ -2,83 +2,102 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Control Defectos OCA - Elevia Pro</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Estilos personalizados para el modo oscuro/neon -->
+    <!-- Estilos personalizados profesionales y adaptables -->
     <style>
         body {
-            background-color: #0b0f19;
+            background-color: #080b11;
             color: #f1f5f9;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
         }
         .glass-card {
-            background: rgba(17, 24, 39, 0.7);
-            backdrop-filter: blur(12px);
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
         .glass-input {
-            background: rgba(3, 7, 18, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(3, 7, 18, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.12);
             color: #ffffff;
         }
         .glass-input:focus {
             border-color: #8b5cf6;
             outline: none;
-            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.25);
+        }
+        /* Scrollbar personalizado fino */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(3, 7, 18, 0.5);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(139, 92, 246, 0.3);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(139, 92, 246, 0.6);
         }
     </style>
 </head>
-<body class="min-h-screen p-3 sm:p-6 pb-12">
+<body class="min-h-screen p-3 sm:p-6 lg:p-8 pb-16">
 
-    <div class="max-w-4xl mx-auto space-y-6">
+    <div class="max-w-5xl mx-auto space-y-6">
         
-        <!-- Cabecera con Logo y Estado -->
-        <header class="flex flex-col sm:flex-row justify-between items-center glass-card p-4 rounded-2xl gap-4 shadow-xl">
-            <div class="flex items-center gap-3">
-                <!-- Logo desde GitHub -->
-                <img src="logo.jpeg" alt="Logo Empresa" class="w-12 h-12 rounded-xl object-cover border border-purple-500/30 shadow-md" onerror="this.src='https://via.placeholder.com/48?text=OCA'">
-                <div>
-                    <div class="flex items-center gap-2">
-                        <h1 class="text-xl font-bold tracking-tight text-white">Control Defectos OCA</h1>
-                        <span class="text-xs bg-purple-900/60 text-purple-300 border border-purple-700/50 px-2 py-0.5 rounded-full font-medium">Elevia Pro</span>
+        <!-- Cabecera Superior -->
+        <header class="flex flex-col md:flex-row justify-between items-center glass-card p-4 sm:p-5 rounded-2xl gap-4 shadow-2xl">
+            <div class="flex items-center gap-3.5 w-full md:w-auto justify-between md:justify-start">
+                <div class="flex items-center gap-3">
+                    <!-- Logo corporativo con fallback -->
+                    <img src="logo.jpeg" alt="Logo Elevia Pro" class="w-12 h-12 rounded-xl object-cover border border-purple-500/30 shadow-md flex-shrink-0" onerror="this.src='https://via.placeholder.com/48/4f46e5/ffffff?text=OCA'">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h1 class="text-lg sm:text-xl font-bold tracking-tight text-white">Control Defectos OCA</h1>
+                            <span class="text-[10px] sm:text-xs bg-purple-950/80 text-purple-300 border border-purple-700/50 px-2 py-0.5 rounded-full font-medium">Elevia Pro</span>
+                        </div>
+                        <p id="contadorRegistros" class="text-xs text-slate-400 mt-0.5">Sincronizando registros...</p>
                     </div>
-                    <p id="contadorRegistros" class="text-xs text-slate-400 mt-0.5">Cargando registros...</p>
                 </div>
             </div>
 
             <!-- Botonera Superior de Acciones -->
-            <div class="grid grid-cols-2 sm:flex flex-wrap gap-2 w-full sm:w-auto">
-                <button onclick="exportarPDF()" class="bg-rose-950/40 hover:bg-rose-900/50 border border-rose-800/40 text-rose-300 text-xs font-medium px-3 py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm">
-                    📄 PDF
+            <div class="grid grid-cols-2 sm:flex flex-wrap gap-2 w-full md:w-auto">
+                <button onclick="exportarPDF()" class="bg-rose-950/40 hover:bg-rose-900/50 border border-rose-800/40 text-rose-300 text-xs font-medium px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
+                    <span>📄</span> PDF / Imprimir
                 </button>
-                <button onclick="enviarWhatsApp()" class="bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-800/40 text-emerald-300 text-xs font-medium px-3 py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm">
-                    💬 WhatsApp
+                <button onclick="enviarWhatsApp()" class="bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-800/40 text-emerald-300 text-xs font-medium px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
+                    <span>💬</span> WhatsApp
                 </button>
-                <button onclick="exportarJSON()" class="bg-slate-800/60 hover:bg-slate-700/60 border border-slate-700/50 text-slate-300 text-xs font-medium px-3 py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm">
-                    📥 Exportar
+                <button onclick="exportarJSON()" class="bg-slate-800/60 hover:bg-slate-700/60 border border-slate-700/50 text-slate-300 text-xs font-medium px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
+                    <span>📥</span> Exportar
                 </button>
-                <label class="bg-slate-800/60 hover:bg-slate-700/60 border border-slate-700/50 text-slate-300 text-xs font-medium px-3 py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer">
-                    📤 Importar
+                <label class="bg-slate-800/60 hover:bg-slate-700/60 border border-slate-700/50 text-slate-300 text-xs font-medium px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer active:scale-95">
+                    <span>📤</span> Importar
                     <input type="file" id="importFile" accept=".json" class="hidden" onchange="importarJSON(event)">
                 </label>
             </div>
         </header>
 
         <!-- Formulario de Registro -->
-        <div class="glass-card p-5 sm:p-6 rounded-2xl shadow-xl">
-            <h2 class="text-sm font-semibold uppercase tracking-wider text-purple-400 mb-4 flex items-center gap-2">
+        <div class="glass-card p-5 sm:p-6 rounded-2xl shadow-2xl">
+            <h2 class="text-xs sm:text-sm font-semibold uppercase tracking-wider text-purple-400 mb-4 flex items-center gap-2">
                 <span>➕</span> Registrar Nuevo Defecto / Dirección
             </h2>
             <form id="ocaForm" class="space-y-4">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-medium text-slate-400 mb-1.5">Dirección</label>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5">Dirección de la Instalación</label>
                         <input type="text" id="direccion" required 
                             class="w-full px-3.5 py-2.5 rounded-xl glass-input text-sm"
-                            placeholder="Ej. Calle Principal 12">
+                            placeholder="Ej. Calle Principal 12, Valencia">
                     </div>
 
                     <div>
@@ -94,15 +113,23 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-medium text-slate-400 mb-1.5">Fecha de Caducidad</label>
+                        <div class="flex justify-between items-center mb-1.5">
+                            <label class="block text-xs font-medium text-slate-400">Fecha de Caducidad</label>
+                            <!-- Accesos rápidos de fecha -->
+                            <div class="flex gap-1.5 text-[10px]">
+                                <button type="button" onclick="sumarMeses(1)" class="bg-purple-950/60 hover:bg-purple-900 text-purple-300 border border-purple-800/50 px-2 py-0.5 rounded transition">+1 Mes</button>
+                                <button type="button" onclick="sumarMeses(3)" class="bg-purple-950/60 hover:bg-purple-900 text-purple-300 border border-purple-800/50 px-2 py-0.5 rounded transition">+3 Meses</button>
+                                <button type="button" onclick="sumarMeses(12)" class="bg-purple-950/60 hover:bg-purple-900 text-purple-300 border border-purple-800/50 px-2 py-0.5 rounded transition">+1 Año</button>
+                            </div>
+                        </div>
                         <input type="date" id="caducidad" required 
                             class="w-full px-3.5 py-2.5 rounded-xl glass-input text-sm">
                     </div>
 
                     <div>
-                        <label class="block text-xs font-medium text-slate-400 mb-1.5">Notas</label>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5">Notas / Observaciones</label>
                         <input type="text" id="notas" 
                             class="w-full px-3.5 py-2.5 rounded-xl glass-input text-sm"
                             placeholder="Ej. Falta acta, retenedor dañado...">
@@ -110,19 +137,33 @@
                 </div>
 
                 <button type="submit" 
-                    class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold py-3 rounded-xl transition-all shadow-lg shadow-purple-900/30 flex items-center justify-center gap-2 text-base">
-                    <span>+ Añadir Registro</span>
+                    class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold py-3 rounded-xl transition-all shadow-lg shadow-purple-900/30 flex items-center justify-center gap-2 text-sm sm:text-base active:scale-[0.99]">
+                    <span>+ Añadir Registro al Sistema</span>
                 </button>
             </form>
         </div>
 
-        <!-- Listado y Buscador -->
-        <div class="glass-card p-5 sm:p-6 rounded-2xl shadow-xl">
-            <div class="flex flex-col sm:flex-row justify-between items-center mb-5 gap-3">
-                <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-300">Listado de Defectos OCA</h2>
-                <div class="flex gap-2 w-full sm:w-auto">
+        <!-- Listado, Filtros y Tabla -->
+        <div class="glass-card p-5 sm:p-6 rounded-2xl shadow-2xl space-y-4">
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 border-b border-slate-800 pb-4">
+                <div>
+                    <h2 class="text-xs sm:text-sm font-semibold uppercase tracking-wider text-slate-200">Listado de Defectos OCA</h2>
+                    <p class="text-xs text-slate-400 mt-0.5">Gestión y control de plazos vigentes</p>
+                </div>
+
+                <!-- Pestañas de filtrado rápido y Buscador -->
+                <div class="flex flex-col sm:flex-row gap-2.5 w-full lg:w-auto items-stretch sm:items-center">
+                    <!-- Filtros rápidos -->
+                    <div class="flex bg-slate-900/80 p-1 rounded-xl border border-slate-800 text-xs">
+                        <button onclick="filtrarEstado('todos')" id="btn-todos" class="px-3 py-1.5 rounded-lg font-medium transition bg-purple-600 text-white shadow">Todos</button>
+                        <button onclick="filtrarEstado('vigente')" id="btn-vigente" class="px-3 py-1.5 rounded-lg font-medium transition text-slate-400 hover:text-white">Vigentes</button>
+                        <button onclick="filtrarEstado('proximo')" id="btn-proximo" class="px-3 py-1.5 rounded-lg font-medium transition text-slate-400 hover:text-white">Próximos</button>
+                        <button onclick="filtrarEstado('caducado')" id="btn-caducado" class="px-3 py-1.5 rounded-lg font-medium transition text-slate-400 hover:text-white">Caducados</button>
+                    </div>
+
                     <input type="text" id="buscador" placeholder="Buscar dirección o notas..." 
-                        class="px-3.5 py-2 text-xs rounded-xl glass-input w-full sm:w-64">
+                        class="px-3.5 py-2 text-xs rounded-xl glass-input w-full sm:w-52">
+                    
                     <button onclick="borrarTodo()" 
                         class="bg-rose-950/30 hover:bg-rose-900/50 border border-rose-800/40 text-rose-300 text-xs px-3 py-2 rounded-xl transition-all whitespace-nowrap">
                         Borrar todo
@@ -130,57 +171,66 @@
                 </div>
             </div>
 
-            <!-- Tabla adaptada -->
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
+            <!-- Tabla adaptada con scroll suave -->
+            <div class="overflow-x-auto -mx-5 sm:mx-0 px-5 sm:px-0">
+                <table class="w-full text-left border-collapse min-w-[650px]">
                     <thead>
-                        <tr class="text-slate-400 text-xs uppercase tracking-wider border-b border-slate-800">
-                            <th class="p-3">Dirección</th>
-                            <th class="p-3">Estado</th>
-                            <th class="p-3">Caducidad</th>
-                            <th class="p-3">Nota</th>
-                            <th class="p-3 text-center">Acción</th>
+                        <tr class="text-slate-400 text-xs uppercase tracking-wider border-b border-slate-800/80">
+                            <th class="py-3 px-3">Dirección</th>
+                            <th class="py-3 px-3">Estado / Responsable</th>
+                            <th class="py-3 px-3">Caducidad / Plazo</th>
+                            <th class="py-3 px-3">Notas</th>
+                            <th class="py-3 px-3 text-center">Acción</th>
                         </tr>
                     </thead>
-                    <tbody id="tablaOcas" class="divide-y divide-slate-800/60 text-sm">
+                    <tbody id="tablaOcas" class="divide-y divide-slate-800/50 text-sm">
                         <!-- Dinámico -->
                     </tbody>
                 </table>
             </div>
-            <div id="sinRegistros" class="text-center py-10 text-slate-500 text-sm hidden">
-                No hay registros guardados en Supabase.
+            
+            <div id="sinRegistros" class="text-center py-12 text-slate-500 text-sm hidden">
+                <div class="text-3xl mb-2">📂</div>
+                No se encontraron registros activos en este filtro.
             </div>
         </div>
 
-        <!-- Footer con estado de sincronización -->
-        <footer class="text-center text-xs text-slate-500 pt-2">
-            Control de Defectos OCA • <span id="syncStatus" class="text-emerald-400">Sincronizado con Supabase en tiempo real ⚡</span>
+        <!-- Footer -->
+        <footer class="text-center text-xs text-slate-500 pt-2 pb-6 space-y-1">
+            <p>Control de Defectos OCA • <span id="syncStatus" class="text-emerald-400 font-medium">Sincronizado con Supabase en tiempo real ⚡</span></p>
+            <p class="text-[11px] text-slate-600">Elevia Pro • Todos los derechos reservados</p>
         </footer>
     </div>
 
-    <!-- Script de Conexión y Lógica -->
+    <!-- Script de Conexión y Lógica Avanzada -->
     <script>
-        // CONFIGURACIÓN DE SUPABASE (Sustituye por tus credenciales del proyecto)
+        // CONFIGURACIÓN DE SUPABASE (Sustituye por tus credenciales reales)
         const SUPABASE_URL = 'https://TU-PROYECTO.supabase.co';
         const SUPABASE_ANON_KEY = 'TU-ANON-KEY';
         
         let supabaseClient = null;
-        let registrosLocales = [];
+        let registrosGlobales = [];
+        let filtroActual = 'todos';
+
+        // Auto-fijar fecha por defecto a 1 año a partir de hoy al cargar
+        window.addEventListener('DOMContentLoaded', () => {
+            sumarMeses(12);
+        });
 
         try {
             supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             initSupabase();
         } catch (e) {
-            console.warn("Supabase no configurado correctamente, operando en modo local.", e);
+            console.warn("Supabase no configurado, operando en modo local.", e);
             document.getElementById('syncStatus').innerText = "Modo local (Configura Supabase)";
-            document.getElementById('syncStatus').className = "text-amber-400";
+            document.getElementById('syncStatus').className = "text-amber-400 font-medium";
             cargarLocalFallback();
         }
 
         async function initSupabase() {
             await cargarRegistrosSupabase();
             
-            // Suscripción Realtime para sincronizar al instante en otro dispositivo
+            // Suscripción Realtime bidireccional instantánea
             supabaseClient
                 .channel('public:oca_registros')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'oca_registros' }, payload => {
@@ -204,8 +254,14 @@
                 console.error('Error cargando de Supabase:', error);
                 return;
             }
-            registrosLocales = data || [];
-            renderizarTabla(registrosLocales);
+            registrosGlobales = data || [];
+            aplicarFiltrosYRenderizar();
+        }
+
+        function sumarMeses(meses) {
+            const fecha = new Date();
+            fecha.setMonth(fecha.getMonth() + meses);
+            document.getElementById('caducidad').valueAsDate = fecha;
         }
 
         // Manejo del Formulario
@@ -227,13 +283,66 @@
                 }
             } else {
                 nuevoItem.id = Date.now();
-                registrosLocales.unshift(nuevoItem);
-                localStorage.setItem('oca_fallback', JSON.stringify(registrosLocales));
-                renderizarTabla(registrosLocales);
+                registrosGlobales.unshift(nuevoItem);
+                localStorage.setItem('oca_fallback', JSON.stringify(registrosGlobales));
+                aplicarFiltrosYRenderizar();
             }
 
             this.reset();
+            sumarMeses(12); // restablecer valor por defecto
         });
+
+        function filtrarEstado(tipo) {
+            filtroActual = tipo;
+            ['todos', 'vigente', 'proximo', 'caducado'].forEach(t => {
+                const btn = document.getElementById(`btn-${t}`);
+                if (t === tipo) {
+                    btn.className = "px-3 py-1.5 rounded-lg font-medium transition bg-purple-600 text-white shadow";
+                } else {
+                    btn.className = "px-3 py-1.5 rounded-lg font-medium transition text-slate-400 hover:text-white";
+                }
+            });
+            aplicarFiltrosYRenderizar();
+        }
+
+        function aplicarFiltrosYRenderizar() {
+            const textoBusqueda = document.getElementById('buscador').value.toLowerCase();
+            
+            const filtrados = registrosGlobales.filter(reg => {
+                const coincideTexto = reg.direccion.toLowerCase().includes(textoBusqueda) || 
+                                      (reg.notas && reg.notas.toLowerCase().includes(textoBusqueda)) ||
+                                      reg.estado.toLowerCase().includes(textoBusqueda);
+                
+                if (!coincideTexto) return false;
+
+                if (filtroActual === 'todos') return true;
+
+                const { tipo } = calcularEstadoInfo(reg.caducidad);
+                if (filtroActual === 'vigente' && tipo === 'vigente') return true;
+                if (filtroActual === 'proximo' && tipo === 'proximo') return true;
+                if (filtroActual === 'caducado' && tipo === 'caducado') return true;
+
+                return false;
+            });
+
+            renderizarTabla(filtrados);
+        }
+
+        function calcularEstadoInfo(fechaCaducidadStr) {
+            const hoy = new Date();
+            hoy.setHours(0,0,0,0);
+            const cad = new Date(fechaCaducidadStr);
+            cad.setHours(0,0,0,0);
+            const diffDays = Math.ceil((cad - hoy) / (1000 * 60 * 60 * 24));
+            
+            if (diffDays < 0) {
+                return { tipo: 'caducado', texto: `Caducado (${Math.abs(diffDays)}d)`, clase: 'bg-rose-950/60 text-rose-300 border-rose-800/40' };
+            } else if (diffDays <= 30) {
+                return { tipo: 'proximo', texto: `Próximo (${diffDays}d)`, clase: 'bg-amber-950/60 text-amber-300 border-amber-800/40' };
+            } else {
+                return { tipo: 'vigente', texto: `Vigente (${diffDays}d)`, clase: 'bg-emerald-950/60 text-emerald-300 border-emerald-800/40' };
+            }
+        }
 
         function renderizarTabla(datos) {
             const tbody = document.getElementById('tablaOcas');
@@ -241,7 +350,7 @@
             const contador = document.getElementById('contadorRegistros');
             
             tbody.innerHTML = '';
-            contador.innerText = `${datos.length} registro${datos.length !== 1 ? 's' : ''}`;
+            contador.innerText = `${registrosGlobales.length} registro${registrosGlobales.length !== 1 ? 's' : ''} totales`;
 
             if (datos.length === 0) {
                 sinRegistros.classList.remove('hidden');
@@ -254,28 +363,27 @@
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-800/40 transition-colors";
 
-                // Calcular estado de caducidad visual
-                const hoy = new Date();
-                hoy.setHours(0,0,0,0);
-                const cad = new Date(reg.caducidad);
-                cad.setHours(0,0,0,0);
-                const diffDays = Math.ceil((cad - hoy) / (1000 * 60 * 60 * 24));
-                
-                let badgeClass = "bg-emerald-950/60 text-emerald-300 border-emerald-800/40";
-                if (diffDays < 0) badgeClass = "bg-rose-950/60 text-rose-300 border-rose-800/40";
-                else if (diffDays <= 30) badgeClass = "bg-amber-950/60 text-amber-300 border-amber-800/40";
+                const estadoInfo = calcularEstadoInfo(reg.caducidad);
 
                 tr.innerHTML = `
-                    <td class="p-3 font-medium text-white">${reg.direccion}</td>
-                    <td class="p-3"><span class="text-xs px-2.5 py-1 rounded-lg border bg-slate-900/60 border-slate-700/60 text-slate-300">${reg.estado}</span></td>
-                    <td class="p-3">
-                        <div class="text-xs px-2.5 py-1 rounded-lg border inline-block ${badgeClass}">
-                            ${reg.caducidad}
+                    <td class="py-3.5 px-3 font-medium text-white">
+                        <div class="line-clamp-2">${reg.direccion}</div>
+                    </td>
+                    <td class="py-3.5 px-3">
+                        <span class="text-xs px-2.5 py-1 rounded-lg border bg-slate-900/60 border-slate-700/60 text-slate-300 inline-block">${reg.estado}</span>
+                    </td>
+                    <td class="py-3.5 px-3">
+                        <div class="text-xs px-2.5 py-1 rounded-lg border inline-flex items-center gap-1.5 ${estadoInfo.clase}">
+                            <span class="w-1.5 h-1.5 rounded-full ${estadoInfo.tipo === 'caducado' ? 'bg-rose-400' : estadoInfo.tipo === 'proximo' ? 'bg-amber-400' : 'bg-emerald-400'}"></span>
+                            <span class="font-medium">${reg.caducidad}</span>
+                            <span class="opacity-75 text-[10px]">(${estadoInfo.texto})</span>
                         </div>
                     </td>
-                    <td class="p-3 text-xs text-slate-400 italic">${reg.notas || '-'}</td>
-                    <td class="p-3 text-center">
-                        <button onclick="eliminarRegistro('${reg.id}')" class="text-slate-500 hover:text-rose-400 transition-colors p-1" title="Eliminar">
+                    <td class="py-3.5 px-3 text-xs text-slate-400 italic">
+                        <div class="line-clamp-2">${reg.notas || '-'}</div>
+                    </td>
+                    <td class="py-3.5 px-3 text-center">
+                        <button onclick="eliminarRegistro('${reg.id}')" class="text-slate-500 hover:text-rose-400 transition-colors p-1.5 rounded-lg hover:bg-rose-950/30" title="Eliminar registro">
                             🗑️
                         </button>
                     </td>
@@ -285,49 +393,44 @@
         }
 
         async function eliminarRegistro(id) {
-            if (confirm('¿Eliminar este registro?')) {
+            if (confirm('¿Estás seguro de eliminar este registro?')) {
                 if (supabaseClient) {
                     const { error } = await supabaseClient.from('oca_registros').delete().eq('id', id);
                     if (error) alert('Error al eliminar: ' + error.message);
                 } else {
-                    registrosLocales = registrosLocales.importaciones = registrosLocales.filter(r => r.id != id);
-                    localStorage.setItem('oca_fallback', JSON.stringify(registrosLocales));
-                    renderizarTabla(registrosLocales);
+                    registrosGlobales = registrosGlobales.filter(r => r.id != id);
+                    localStorage.setItem('oca_fallback', JSON.stringify(registrosGlobales));
+                    aplicarFiltrosYRenderizar();
                 }
             }
         }
 
         async function borrarTodo() {
-            if (confirm('¿Estás seguro de vaciar todos los registros?')) {
+            if (confirm('¿Estás seguro de vaciar todos los registros del sistema?')) {
                 if (supabaseClient) {
-                    // Borra todos los registros de la tabla en Supabase
                     const { error } = await supabaseClient.from('oca_registros').delete().neq('id', 0);
                     if (error) alert('Error al vaciar: ' + error.message);
                 } else {
-                    registrosLocales = [];
+                    registrosGlobales = [];
                     localStorage.removeItem('oca_fallback');
-                    renderizarTabla(registrosLocales);
+                    aplicarFiltrosYRenderizar();
                 }
             }
         }
 
-        // Buscador en tiempo real
-        document.getElementById('buscador').addEventListener('input', function(e) {
-            const texto = e.target.value.toLowerCase();
-            const filtrados = registrosLocales.filter(r => 
-                r.direccion.toLowerCase().includes(texto) || 
-                (r.notas && r.notas.toLowerCase().includes(texto)) ||
-                r.estado.toLowerCase().includes(texto)
-            );
-            renderizarTabla(filtrados);
+        document.getElementById('buscador').addEventListener('input', () => {
+            aplicarFiltrosYRenderizar();
         });
 
-        // Funciones auxiliares de exportación e importación
         function exportarJSON() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(registrosLocales, null, 2));
+            if (registrosGlobales.length === 0) {
+                alert('No hay registros para exportar.');
+                return;
+            }
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(registrosGlobales, null, 2));
             const downloadAnchor = document.createElement('a');
             downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", "defectos_oca_backup.json");
+            downloadAnchor.setAttribute("download", "defectos_oca_elevia.json");
             document.body.appendChild(downloadAnchor);
             downloadAnchor.click();
             downloadAnchor.remove();
@@ -342,7 +445,7 @@
                     const imported = JSON.parse(e.target.result);
                     if (Array.isArray(imported)) {
                         for (let item of imported) {
-                            delete item.id; // limpiar id para evitar conflictos
+                            delete item.id;
                             if (supabaseClient) {
                                 await supabaseClient.from('oca_registros').insert([item]);
                             }
@@ -350,31 +453,31 @@
                         alert('¡Importación completada con éxito!');
                     }
                 } catch (err) {
-                    alert('El archivo no es válido.');
+                    alert('El archivo JSON no es válido.');
                 }
             };
             reader.readAsText(file);
         }
 
         function enviarWhatsApp() {
-            if (registrosLocales.length === 0) {
+            if (registrosGlobales.length === 0) {
                 alert('No hay registros para enviar.');
                 return;
             }
-            let texto = "📋 *REPORTE DE DEFECTOS OCA* 📋\n\n";
-            registrosLocales.forEach((r, index) => {
+            let texto = "📋 *REPORTE DE DEFECTOS OCA - ELEVIA PRO* 📋\n\n";
+            registrosGlobales.forEach((r, index) => {
                 texto += `${index + 1}. *Dir:* ${r.direccion}\n   *Estado:* ${r.estado}\n   *Caduca:* ${r.caducidad}\n   *Notas:* ${r.notas || 'Ninguna'}\n\n`;
             });
             window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`, '_blank');
         }
 
         function exportarPDF() {
-            window.print(); // Abre el cuadro de impresión nativo optimizado para PDF
+            window.print();
         }
 
         function cargarLocalFallback() {
-            registrosLocales = JSON.parse(localStorage.getItem('oca_fallback')) || [];
-            renderizarTabla(registrosLocales);
+            registrosGlobales = JSON.parse(localStorage.getItem('oca_fallback')) || [];
+            aplicarFiltrosYRenderizar();
         }
     </script>
 </body>
