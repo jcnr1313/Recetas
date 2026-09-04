@@ -293,10 +293,16 @@
         let filtroActual = 'todos';
         let modoRemoto = false;
         let idsSeleccionados = new Set();
+        let intervaloSync = null;
 
         window.addEventListener('DOMContentLoaded', () => {
             sumarMeses(12);
             intentarConexionSupabase();
+
+            // Detectar cuando vuelves a enfocar la pestaña del móvil para actualizar al instante
+            window.addEventListener('focus', () => {
+                if (modoRemoto) cargarRegistrosSupabase();
+            });
         });
 
         function intentarConexionSupabase() {
@@ -333,12 +339,21 @@
                         })
                         .subscribe();
                 }
+
+                // Sondeo automático de respaldo cada 3 segundos (evita bloqueos de red móvil / WebSockets)
+                if (intervaloSync) clearInterval(intervaloSync);
+                intervaloSync = setInterval(() => {
+                    if (document.visibilityState === 'visible') {
+                        cargarRegistrosSupabase(true); // Carga silenciosa
+                    }
+                }, 3000);
+
             } catch (err) {
                 activarModoLocal("Modo local (Error de conexión)");
             }
         }
 
-        async function cargarRegistrosSupabase() {
+        async function cargarRegistrosSupabase(silencioso = false) {
             if (!modoRemoto) return;
             const { data, error } = await supabaseClient
                 .from('oca_registros')
@@ -346,8 +361,12 @@
                 .order('created_at', { ascending: false });
 
             if (!error) {
-                registrosGlobales = data || [];
-                aplicarFiltrosYRenderizar();
+                const nuevosDatos = data || [];
+                // Solo renderizamos de nuevo si hay cambios reales en la cantidad o datos para evitar parpadeos
+                if (JSON.stringify(nuevosDatos) !== JSON.stringify(registrosGlobales)) {
+                    registrosGlobales = nuevosDatos;
+                    aplicarFiltrosYRenderizar();
+                }
             }
         }
 
