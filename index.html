@@ -324,15 +324,17 @@
                 document.getElementById('syncStatus').className = "text-emerald-400 font-bold";
                 await cargarRegistrosSupabase();
 
-                // Suscripción Realtime por WebSockets
-                supabaseClient
-                    .channel('public:oca_registros')
-                    .on('postgres_changes', { event: '*', schema: 'public', table: 'oca_registros' }, () => {
-                        cargarRegistrosSupabase();
-                    })
-                    .subscribe();
+                // Suscripción Realtime reforzada
+                if (!supabaseClient.getChannels().find(c => c.topic === 'realtime:public:oca_registros')) {
+                    supabaseClient
+                        .channel('realtime:public:oca_registros')
+                        .on('postgres_changes', { event: '*', schema: 'public', table: 'oca_registros' }, () => {
+                            cargarRegistrosSupabase();
+                        })
+                        .subscribe();
+                }
             } catch (err) {
-                activarModoLocal("Modo local (Tabla 'oca_registros' no encontrada)");
+                activarModoLocal("Modo local (Error de conexión)");
             }
         }
 
