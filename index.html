@@ -299,16 +299,8 @@
             sumarMeses(12);
             intentarConexionSupabase();
 
-            // Detectar cuando vuelves a mirar el móvil o tocas la pantalla para actualizar al instante
+            // Detectar cuando vuelves a enfocar la pestaña del móvil para actualizar al instante
             window.addEventListener('focus', () => {
-                if (modoRemoto) cargarRegistrosSupabase();
-            });
-            document.addEventListener('visibilitychange', () => {
-                if (document.visibilityState === 'visible' && modoRemoto) {
-                    cargarRegistrosSupabase();
-                }
-            });
-            window.addEventListener('pageshow', () => {
                 if (modoRemoto) cargarRegistrosSupabase();
             });
         });
@@ -348,11 +340,11 @@
                         .subscribe();
                 }
 
-                // Sondeo automático de respaldo cada 3 segundos
+                // Sondeo automático de respaldo cada 3 segundos (evita bloqueos de red móvil / WebSockets)
                 if (intervaloSync) clearInterval(intervaloSync);
                 intervaloSync = setInterval(() => {
                     if (document.visibilityState === 'visible') {
-                        cargarRegistrosSupabase(true);
+                        cargarRegistrosSupabase(true); // Carga silenciosa
                     }
                 }, 3000);
 
@@ -370,6 +362,7 @@
 
             if (!error) {
                 const nuevosDatos = data || [];
+                // Solo renderizamos de nuevo si hay cambios reales en la cantidad o datos para evitar parpadeos
                 if (JSON.stringify(nuevosDatos) !== JSON.stringify(registrosGlobales)) {
                     registrosGlobales = nuevosDatos;
                     aplicarFiltrosYRenderizar();
@@ -476,7 +469,7 @@
                 const esResuelto = reg.estado === 'Corregido / Finalizado';
 
                 if (filtroActual === 'resuelto') return esResuelto;
-                if (esResuelto) return false;
+                if (esResuelto) return false; // Ocultar resueltos en filtros operativos estándar
 
                 if (filtroActual === 'todos') return true;
 
@@ -529,6 +522,7 @@
                 const estadoInfo = calcularEstadoInfo(reg.caducidad);
                 const estaSeleccionado = idsSeleccionados.has(String(reg.id));
                 
+                // Estilo de etiqueta de gravedad
                 let gravedadBadge = '<span class="text-[11px] px-2.5 py-1 rounded-lg border bg-blue-950/50 border-blue-800/50 text-blue-300 font-medium">Leve</span>';
                 if (reg.gravedad === 'Grave') {
                     gravedadBadge = '<span class="text-[11px] px-2.5 py-1 rounded-lg border bg-amber-950/50 border-amber-800/50 text-amber-300 font-medium">⚠️ Grave</span>';
