@@ -56,7 +56,7 @@
         }
     </style>
 </head>
-<body class="min-h-screen p-3 sm:p-6 lg:p-8 pb-16">
+<body class="min-h-screen p-3 sm:p-6 lg:p-8 pb-28">
 
     <div class="max-w-6xl mx-auto space-y-6">
         
@@ -84,7 +84,7 @@
                 <button onclick="exportarPDF()" class="bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/50 text-rose-300 text-xs font-semibold px-4 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg active:scale-95 group">
                     <span class="group-hover:scale-110 transition">📄</span> PDF / Imprimir
                 </button>
-                <button onclick="enviarWhatsApp()" class="bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-800/50 text-emerald-300 text-xs font-semibold px-4 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg active:scale-95 group">
+                <button onclick="enviarWhatsAppGeneral()" class="bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-800/50 text-emerald-300 text-xs font-semibold px-4 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg active:scale-95 group">
                     <span class="group-hover:scale-110 transition">💬</span> WhatsApp
                 </button>
                 <button onclick="exportarJSON()" class="bg-slate-800/70 hover:bg-slate-700/80 border border-slate-700/60 text-slate-300 text-xs font-semibold px-4 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg active:scale-95 group">
@@ -207,9 +207,12 @@
 
             <!-- Tabla adaptada con scroll suave -->
             <div class="overflow-x-auto -mx-6 sm:mx-0 px-6 sm:px-0">
-                <table class="w-full text-left border-collapse min-w-[750px]">
+                <table class="w-full text-left border-collapse min-w-[800px]">
                     <thead>
                         <tr class="text-slate-400 text-xs uppercase tracking-wider border-b border-slate-800/60">
+                            <th class="py-3 px-3 w-10 text-center">
+                                <input type="checkbox" id="checkAll" onchange="toggleSeleccionarTodos(this)" class="rounded bg-slate-900 border-slate-700 text-purple-600 focus:ring-purple-500 w-4 h-4 cursor-pointer">
+                            </th>
                             <th class="py-3 px-3 font-semibold">Dirección</th>
                             <th class="py-3 px-3 font-semibold">Gravedad</th>
                             <th class="py-3 px-3 font-semibold">Estado / Responsable</th>
@@ -237,6 +240,21 @@
         </footer>
     </div>
 
+    <!-- Barra Flotante para Enviar Selección a Administración por WhatsApp -->
+    <div id="barraFlotante" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 glass-card px-6 py-3.5 rounded-2xl shadow-2xl z-40 border border-emerald-500/40 flex items-center gap-4 transition-all duration-300 translate-y-32 opacity-0 pointer-events-none">
+        <div class="flex items-center gap-2 text-xs sm:text-sm text-emerald-300 font-bold">
+            <span>💬</span>
+            <span id="textoSeleccionadosCount">0 seleccionados</span>
+        </div>
+        <div class="h-5 w-[1px] bg-slate-700"></div>
+        <button onclick="enviarWhatsAppAdministracion()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-bold px-4 py-2 rounded-xl shadow-lg flex items-center gap-2 transition active:scale-95">
+            <span>📲 Avisar Facturación Admón</span>
+        </button>
+        <button onclick="deseleccionarTodo()" class="text-slate-400 hover:text-white text-xs font-semibold px-2 py-1">
+            ✕
+        </button>
+    </div>
+
     <!-- Modal de Ayuda / Información (i) -->
     <div id="modalAyuda" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
         <div class="glass-card max-w-md w-full p-6 rounded-3xl shadow-2xl space-y-4 border border-purple-500/40">
@@ -249,7 +267,7 @@
             <div class="text-xs text-slate-300 space-y-3 leading-relaxed">
                 <p><strong>Control Defectos OCA Pro</strong> optimiza la gestión técnica de plazos de inspección y subsanación en ascensores con sincronización en la nube.</p>
                 <ul class="list-disc pl-4 space-y-1.5 text-slate-400">
-                    <li><strong class="text-slate-200">Gravedad de Defectos:</strong> Clasifica entre Leve, Grave y Muy Grave para priorizar intervenciones críticas.</li>
+                    <li><strong class="text-slate-200">Aviso de Facturación:</strong> Selecciona los trabajos terminados con las casillas de la izquierda y pulsa el botón flotante para avisar directamente a administración por WhatsApp (+34 627 95 66 91).</li>
                     <li><strong class="text-slate-200">Historial / Resueltos:</strong> Al marcar el estado como <em class="text-emerald-300">"Corregido / Finalizado"</em>, el sistema lo archiva automáticamente en la pestaña de Historial.</li>
                     <li><strong class="text-slate-200">Indicadores de Plazo:</strong>
                         <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 ml-1"></span> <strong>Verde:</strong> Vigente (>30 días).
@@ -274,6 +292,7 @@
         let registrosGlobales = [];
         let filtroActual = 'todos';
         let modoRemoto = false;
+        let idsSeleccionados = new Set();
 
         window.addEventListener('DOMContentLoaded', () => {
             sumarMeses(12);
@@ -470,6 +489,7 @@
 
             if (datos.length === 0) {
                 sinRegistros.classList.remove('hidden');
+                actualizarBarraFlotante();
                 return;
             } else {
                 sinRegistros.classList.add('hidden');
@@ -479,6 +499,7 @@
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-800/40 transition-colors group";
                 const estadoInfo = calcularEstadoInfo(reg.caducidad);
+                const estaSeleccionado = idsSeleccionados.has(String(reg.id));
                 
                 // Estilo de etiqueta de gravedad
                 let gravedadBadge = '<span class="text-[11px] px-2.5 py-1 rounded-lg border bg-blue-950/50 border-blue-800/50 text-blue-300 font-medium">Leve</span>';
@@ -489,6 +510,9 @@
                 }
 
                 tr.innerHTML = `
+                    <td class="py-4 px-3 text-center">
+                        <input type="checkbox" value="${reg.id}" ${estaSeleccionado ? 'checked' : ''} onchange="toggleSeleccionItem(this, '${reg.id}')" class="rounded bg-slate-900 border-slate-700 text-purple-600 focus:ring-purple-500 w-4 h-4 cursor-pointer">
+                    </td>
                     <td class="py-4 px-3 font-semibold text-white">
                         <div class="line-clamp-2">${reg.direccion}</div>
                     </td>
@@ -521,10 +545,79 @@
                 `;
                 tbody.appendChild(tr);
             });
+            actualizarBarraFlotante();
+        }
+
+        function toggleSeleccionItem(checkbox, id) {
+            if (checkbox.checked) {
+                idsSeleccionados.add(String(id));
+            } else {
+                idsSeleccionados.delete(String(id));
+            }
+            actualizarBarraFlotante();
+        }
+
+        function toggleSeleccionarTodos(masterCheckbox) {
+            const checkboxes = document.querySelectorAll('#tablaOcas input[type="checkbox"]');
+            checkboxes.forEach(cb => {
+                cb.checked = masterCheckbox.checked;
+                if (masterCheckbox.checked) {
+                    idsSeleccionados.add(String(cb.value));
+                } else {
+                    idsSeleccionados.delete(String(cb.value));
+                }
+            });
+            actualizarBarraFlotante();
+        }
+
+        function deseleccionarTodo() {
+            idsSeleccionados.clear();
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = false);
+            actualizarBarraFlotante();
+        }
+
+        function actualizarBarraFlotante() {
+            const barra = document.getElementById('barraFlotante');
+            const textoCount = document.getElementById('textoSeleccionadosCount');
+            const count = idsSeleccionados.size;
+
+            textoCount.innerText = `${count} ${count === 1 ? 'seleccionado' : 'seleccionados'}`;
+
+            if (count > 0) {
+                barra.classList.remove('translate-y-32', 'opacity-0', 'pointer-events-none');
+            } else {
+                barra.classList.add('translate-y-32', 'opacity-0', 'pointer-events-none');
+            }
+        }
+
+        function enviarWhatsAppAdministracion() {
+            if (idsSeleccionados.size === 0) {
+                alert('Por favor, selecciona al menos un trabajo realizado.');
+                return;
+            }
+
+            let texto = "Hola administración, los siguientes trabajos ya están realizados y se puede proceder a su facturación:\n\n";
+            
+            let contador = 1;
+            registrosGlobales.forEach(r => {
+                if (idsSeleccionados.has(String(r.id))) {
+                    texto += `${contador}. *${r.direccion}*`;
+                    if (r.notas) {
+                        texto += ` (Notas: ${r.notas})`;
+                    }
+                    texto += `\n`;
+                    contador++;
+                }
+            });
+
+            const numeroTelefono = "34627956691";
+            window.open(`https://api.whatsapp.com/send?phone=${numeroTelefono}&text=${encodeURIComponent(texto)}`, '_blank');
         }
 
         async function eliminarRegistro(id) {
             if (confirm('¿Estás seguro de eliminar este registro del sistema?')) {
+                idsSeleccionados.delete(String(id));
                 if (modoRemoto) {
                     const { error } = await supabaseClient.from('oca_registros').delete().eq('id', id);
                     if (error) alert('Error al eliminar: ' + error.message);
@@ -539,6 +632,7 @@
 
         async function borrarTodo() {
             if (confirm('¿Estás seguro de vaciar todos los registros del sistema? Esta acción es irreversible.')) {
+                idsSeleccionados.clear();
                 if (modoRemoto) {
                     const { error } = await supabaseClient.from('oca_registros').delete().neq('id', 0);
                     if (error) alert('Error al vaciar: ' + error.message);
@@ -609,7 +703,7 @@
             reader.readAsText(file);
         }
 
-        function enviarWhatsApp() {
+        function enviarWhatsAppGeneral() {
             if (registrosGlobales.length === 0) {
                 alert('No hay registros para enviar.');
                 return;
