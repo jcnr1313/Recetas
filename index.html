@@ -141,6 +141,7 @@
                             <option value="Técnico de empresa" class="bg-slate-900">Técnico de empresa</option>
                             <option value="Pendiente de acta" class="bg-slate-900">Pendiente de acta</option>
                             <option value="Corregido / Finalizado" class="bg-slate-900">Corregido / Finalizado</option>
+                            <option value="Facturado / Completado" class="bg-slate-900 text-emerald-400">Facturado / Completado</option>
                         </select>
                     </div>
 
@@ -185,12 +186,13 @@
 
                 <!-- Pestañas de filtrado rápido y Buscador -->
                 <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto items-stretch sm:items-center">
-                    <div class="flex bg-slate-950/90 p-1.5 rounded-2xl border border-slate-800/80 text-xs shadow-inner">
+                    <div class="flex flex-wrap bg-slate-950/90 p-1.5 rounded-2xl border border-slate-800/80 text-xs shadow-inner gap-1">
                         <button onclick="filtrarEstado('todos')" id="btn-todos" class="px-3 py-2 rounded-xl font-semibold transition bg-purple-600 text-white shadow-lg">Todos</button>
                         <button onclick="filtrarEstado('vigente')" id="btn-vigente" class="px-3 py-2 rounded-xl font-semibold transition text-slate-400 hover:text-white">Vigentes</button>
                         <button onclick="filtrarEstado('proximo')" id="btn-proximo" class="px-3 py-2 rounded-xl font-semibold transition text-slate-400 hover:text-white">Próximos</button>
                         <button onclick="filtrarEstado('caducado')" id="btn-caducado" class="px-3 py-2 rounded-xl font-semibold transition text-slate-400 hover:text-white">Caducados</button>
                         <button onclick="filtrarEstado('resuelto')" id="btn-resuelto" class="px-3 py-2 rounded-xl font-semibold transition text-slate-400 hover:text-white">✅ Historial</button>
+                        <button onclick="filtrarEstado('facturado')" id="btn-facturado" class="px-3 py-2 rounded-xl font-semibold transition text-slate-400 hover:text-white">💶 Facturados</button>
                     </div>
 
                     <input type="text" id="buscador" placeholder="Buscar dirección, notas o estado..." 
@@ -265,8 +267,8 @@
             <div class="text-xs text-slate-300 space-y-3 leading-relaxed">
                 <p><strong>Control Defectos OCA Pro</strong> optimiza la gestión técnica de plazos de inspección y subsanación en ascensores con sincronización en la nube.</p>
                 <ul class="list-disc pl-4 space-y-1.5 text-slate-400">
-                    <li><strong class="text-slate-200">Aviso de Facturación:</strong> Selecciona los trabajos terminados con las casillas de la izquierda y pulsa el botón flotante para avisar directamente a administración por WhatsApp (+34 627 95 66 91).</li>
-                    <li><strong class="text-slate-200">Historial / Resueltos:</strong> Al marcar el estado como <em class="text-emerald-300">"Corregido / Finalizado"</em>, el sistema lo archiva automáticamente en la pestaña de Historial.</li>
+                    <li><strong class="text-slate-200">Aviso de Facturación:</strong> Selecciona los trabajos terminados con las casillas de la izquierda y pulsa el botón flotante para avisar directamente a administración por WhatsApp (+34 627 95 66 91). Al enviarlo, pasarán automáticamente al apartado de <strong>Facturados</strong>.</li>
+                    <li><strong class="text-slate-200">Apartado Facturados:</strong> Puedes consultar en cualquier momento los trabajos que ya se mandaron a facturar y borrarlos cuando quieras (individualmente o vaciando el apartado).</li>
                     <li><strong class="text-slate-200">Indicadores de Plazo:</strong>
                         <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 ml-1"></span> <span>Verde:</span> Vigente (>30 días).
                         <span class="inline-block w-2 h-2 rounded-full bg-amber-400 ml-1"></span> <span>Ámbar:</span> Próximo (≤30 días).
@@ -431,7 +433,7 @@
 
         function filtrarEstado(tipo) {
             filtroActual = tipo;
-            ['todos', 'vigente', 'proximo', 'caducado', 'resuelto'].forEach(t => {
+            ['todos', 'vigente', 'proximo', 'caducado', 'resuelto', 'facturado'].forEach(t => {
                 const btn = document.getElementById(`btn-${t}`);
                 if (!btn) return;
                 if (t === tipo) {
@@ -454,7 +456,11 @@
                 
                 if (!coincideTexto) return false;
 
+                const esFacturado = reg.estado === 'Facturado / Completado';
                 const esResuelto = reg.estado === 'Corregido / Finalizado';
+
+                if (filtroActual === 'facturado') return esFacturado;
+                if (esFacturado) return false; // Por defecto los facturados no salen en 'todos', 'vigente', etc. a menos que estés en su pestaña
 
                 if (filtroActual === 'resuelto') return esResuelto;
                 if (esResuelto) return false;
@@ -517,6 +523,11 @@
                     gravedadBadge = '<span class="text-[11px] px-2.5 py-1 rounded-lg border bg-rose-950/60 border-rose-800/60 text-rose-300 font-medium font-bold">🚨 Muy Grave</span>';
                 }
 
+                let estadoBadgeClass = 'bg-slate-900/80 border-slate-700/60 text-slate-300';
+                if (reg.estado === 'Facturado / Completado') {
+                    estadoBadgeClass = 'bg-emerald-950/60 border-emerald-800/50 text-emerald-300 font-bold';
+                }
+
                 tr.innerHTML = `
                     <td class="py-4 px-3 text-center">
                         <input type="checkbox" value="${reg.id}" ${estaSeleccionado ? 'checked' : ''} onchange="toggleSeleccionItem(this, '${reg.id}')" class="rounded bg-slate-900 border-slate-700 text-purple-600 focus:ring-purple-500 w-4 h-4 cursor-pointer">
@@ -528,7 +539,7 @@
                         ${gravedadBadge}
                     </td>
                     <td class="py-4 px-3">
-                        <span class="text-xs px-2.5 py-1 rounded-lg border bg-slate-900/80 border-slate-700/60 text-slate-300 inline-block font-medium">${reg.estado}</span>
+                        <span class="text-xs px-2.5 py-1 rounded-lg border ${estadoBadgeClass} inline-block font-medium">${reg.estado}</span>
                     </td>
                     <td class="py-4 px-3">
                         <div class="text-xs px-2.5 py-1 rounded-lg border inline-flex items-center gap-1.5 ${estadoInfo.clase}">
@@ -599,7 +610,7 @@
             }
         }
 
-        function enviarWhatsAppAdministracion() {
+        async function enviarWhatsAppAdministracion() {
             if (idsSeleccionados.size === 0) {
                 alert('Por favor, selecciona al menos un trabajo realizado.');
                 return;
@@ -608,6 +619,8 @@
             let texto = "Hola administración, los siguientes trabajos ya están realizados y se puede proceder a su facturación:\n\n";
             
             let contador = 1;
+            const idsList = Array.from(idsSeleccionados);
+
             registrosGlobales.forEach(r => {
                 if (idsSeleccionados.has(String(r.id))) {
                     texto += `${contador}. *${r.direccion}*`;
@@ -618,6 +631,24 @@
                     contador++;
                 }
             });
+
+            // Cambiar automáticamente su estado a "Facturado / Completado"
+            for (let id of idsList) {
+                if (modoRemoto) {
+                    await supabaseClient.from('oca_registros').update({ estado: 'Facturado / Completado' }).eq('id', id);
+                } else {
+                    registrosGlobales = registrosGlobales.map(r => r.id == id ? { ...r, estado: 'Facturado / Completado' } : r);
+                }
+            }
+
+            if (!modoRemoto) {
+                localStorage.setItem('oca_fallback_elite', JSON.stringify(registrosGlobales));
+            } else {
+                await cargarRegistrosSupabase();
+            }
+
+            deseleccionarTodo();
+            aplicarFiltrosYRenderizar();
 
             const numeroTelefono = "34627956691";
             window.open(`https://api.whatsapp.com/send?phone=${numeroTelefono}&text=${encodeURIComponent(texto)}`, '_blank');
@@ -639,15 +670,30 @@
         }
 
         async function borrarTodo() {
-            if (confirm('¿Estás seguro de vaciar todos los registros del sistema? Esta acción es irreversible.')) {
+            let mensajeConfirm = '¿Estás seguro de vaciar todos los registros del sistema? Esta acción es irreversible.';
+            if (filtroActual === 'facturado') {
+                mensajeConfirm = '¿Estás seguro de vaciar todos los registros del apartado de Facturados?';
+            }
+
+            if (confirm(mensajeConfirm)) {
                 idsSeleccionados.clear();
                 if (modoRemoto) {
-                    const { error } = await supabaseClient.from('oca_registros').delete().neq('id', 0);
+                    let query = supabaseClient.from('oca_registros').delete();
+                    if (filtroActual === 'facturado') {
+                        query = query.eq('estado', 'Facturado / Completado');
+                    } else {
+                        query = query.neq('id', 0);
+                    }
+                    const { error } = await query;
                     if (error) alert('Error al vaciar: ' + error.message);
                     else await cargarRegistrosSupabase();
                 } else {
-                    registrosGlobales = [];
-                    localStorage.removeItem('oca_fallback_elite');
+                    if (filtroActual === 'facturado') {
+                        registrosGlobales = registrosGlobales.filter(r => r.estado !== 'Facturado / Completado');
+                    } else {
+                        registrosGlobales = [];
+                    }
+                    localStorage.setItem('oca_fallback_elite', JSON.stringify(registrosGlobales));
                     aplicarFiltrosYRenderizar();
                 }
             }
