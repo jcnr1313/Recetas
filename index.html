@@ -147,7 +147,6 @@
                     <div>
                         <div class="flex justify-between items-center mb-1.5">
                             <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Fecha Caducidad</label>
-                            <!-- Accesos rápidos de fecha optimizados -->
                             <div class="flex gap-1 text-[10px]">
                                 <button type="button" onclick="sumarMeses(1)" class="bg-purple-950/80 hover:bg-purple-900 text-purple-300 border border-purple-800/60 px-1.5 py-0.5 rounded transition font-medium">+1M</button>
                                 <button type="button" onclick="sumarMeses(3)" class="bg-purple-950/80 hover:bg-purple-900 text-purple-300 border border-purple-800/60 px-1.5 py-0.5 rounded transition font-medium">+3M</button>
@@ -186,7 +185,6 @@
 
                 <!-- Pestañas de filtrado rápido y Buscador -->
                 <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto items-stretch sm:items-center">
-                    <!-- Filtros rápidos -->
                     <div class="flex bg-slate-950/90 p-1.5 rounded-2xl border border-slate-800/80 text-xs shadow-inner">
                         <button onclick="filtrarEstado('todos')" id="btn-todos" class="px-3 py-2 rounded-xl font-semibold transition bg-purple-600 text-white shadow-lg">Todos</button>
                         <button onclick="filtrarEstado('vigente')" id="btn-vigente" class="px-3 py-2 rounded-xl font-semibold transition text-slate-400 hover:text-white">Vigentes</button>
@@ -270,9 +268,9 @@
                     <li><strong class="text-slate-200">Aviso de Facturación:</strong> Selecciona los trabajos terminados con las casillas de la izquierda y pulsa el botón flotante para avisar directamente a administración por WhatsApp (+34 627 95 66 91).</li>
                     <li><strong class="text-slate-200">Historial / Resueltos:</strong> Al marcar el estado como <em class="text-emerald-300">"Corregido / Finalizado"</em>, el sistema lo archiva automáticamente en la pestaña de Historial.</li>
                     <li><strong class="text-slate-200">Indicadores de Plazo:</strong>
-                        <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 ml-1"></span> <strong>Verde:</strong> Vigente (>30 días).
-                        <span class="inline-block w-2 h-2 rounded-full bg-amber-400 ml-1"></span> <strong>Ámbar:</strong> Próximo (≤30 días).
-                        <span class="inline-block w-2 h-2 rounded-full bg-rose-400 ml-1"></span> <strong>Rojo:</strong> Caducado.
+                        <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 ml-1"></span> <span>Verde:</span> Vigente (>30 días).
+                        <span class="inline-block w-2 h-2 rounded-full bg-amber-400 ml-1"></span> <span>Ámbar:</span> Próximo (≤30 días).
+                        <span class="inline-block w-2 h-2 rounded-full bg-rose-400 ml-1"></span> <span>Rojo:</span> Caducado.
                     </li>
                 </ul>
             </div>
@@ -282,7 +280,7 @@
         </div>
     </div>
 
-    <!-- Script de Conexión y Lógica Avanzada Supabase -->
+    <!-- Script de Conexión y Long Polling Infalible Supabase -->
     <script>
         // CONFIGURACIÓN DE SUPABASE
         const SUPABASE_URL = 'https://nefnltsxblfpfrifdsgy.supabase.co';
@@ -293,23 +291,17 @@
         let filtroActual = 'todos';
         let modoRemoto = false;
         let idsSeleccionados = new Set();
-        let intervaloSync = null;
+        let loopTimer = null;
 
         window.addEventListener('DOMContentLoaded', () => {
             sumarMeses(12);
             intentarConexionSupabase();
 
-            // Detectar cuando vuelves a mirar el móvil o tocas la pantalla para actualizar al instante
-            window.addEventListener('focus', () => {
-                if (modoRemoto) cargarRegistrosSupabase();
-            });
-            document.addEventListener('visibilitychange', () => {
-                if (document.visibilityState === 'visible' && modoRemoto) {
-                    cargarRegistrosSupabase();
+            // Forzar actualización inmediata al enfocar la pestaña o volver al navegador en el móvil
+            document.addEventListener("visibilitychange", () => {
+                if (!document.hidden && modoRemoto) {
+                    cargarRegistrosSupabase(true);
                 }
-            });
-            window.addEventListener('pageshow', () => {
-                if (modoRemoto) cargarRegistrosSupabase();
             });
         });
 
@@ -333,45 +325,35 @@
             try {
                 const { error } = await supabaseClient.from('oca_registros').select('id').limit(1);
                 if (error) throw error;
+                
                 modoRemoto = true;
-                document.getElementById('syncStatus').innerText = "Sincronizado con Supabase en tiempo real ⚡";
+                document.getElementById('syncStatus').innerText = "Sincronizado vía Cloud Poll (Tiempo Real) ⚡";
                 document.getElementById('syncStatus').className = "text-emerald-400 font-bold";
+                
                 await cargarRegistrosSupabase();
 
-                // Suscripción Realtime reforzada
-                if (!supabaseClient.getChannels().find(c => c.topic === 'realtime:public:oca_registros')) {
-                    supabaseClient
-                        .channel('realtime:public:oca_registros')
-                        .on('postgres_changes', { event: '*', schema: 'public', table: 'oca_registros' }, () => {
-                            cargarRegistrosSupabase();
-                        })
-                        .subscribe();
-                }
-
-                // Sondeo automático de respaldo cada 3 segundos
-                if (intervaloSync) clearInterval(intervaloSync);
-                intervaloSync = setInterval(() => {
-                    if (document.visibilityState === 'visible') {
+                if (loopTimer) clearInterval(loopTimer);
+                loopTimer = setInterval(() => {
+                    if (modoRemoto && !document.hidden) {
                         cargarRegistrosSupabase(true);
                     }
-                }, 3000);
+                }, 1500);
 
             } catch (err) {
                 activarModoLocal("Modo local (Error de conexión)");
             }
         }
 
-        async function cargarRegistrosSupabase(silencioso = false) {
+        async function cargarRegistrosSupabase(esSondeo = false) {
             if (!modoRemoto) return;
             const { data, error } = await supabaseClient
                 .from('oca_registros')
                 .select('*')
                 .order('created_at', { ascending: false });
 
-            if (!error) {
-                const nuevosDatos = data || [];
-                if (JSON.stringify(nuevosDatos) !== JSON.stringify(registrosGlobales)) {
-                    registrosGlobales = nuevosDatos;
+            if (!error && data) {
+                if (JSON.stringify(data) !== JSON.stringify(registrosGlobales)) {
+                    registrosGlobales = data;
                     aplicarFiltrosYRenderizar();
                 }
             }
@@ -383,7 +365,6 @@
             document.getElementById('caducidad').valueAsDate = fecha;
         }
 
-        // Manejo del Formulario (Crear o Editar)
         document.getElementById('ocaForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
